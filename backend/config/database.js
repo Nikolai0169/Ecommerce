@@ -45,9 +45,10 @@ const testConnection = async () => {
     return true; // Retorna true si la conexión es exitosa
   } catch (error) {
     console.error("Error al conectar a la base de datos:", error);
-    console.error("Asegúrate de que la base de datos esté en funcionamiento y que las credenciales sean correctas.");
+    console.error(
+      "Asegúrate de que la base de datos esté en funcionamiento y que las credenciales sean correctas.",
+    );
     return false; // Retorna false si la conexión falla
-
   }
 };
 
@@ -55,21 +56,24 @@ const testConnection = async () => {
 /* Esta función creara las tablas automaticamente basandose en los modelos definidos */
 /*@param {boolean} force - Si es true, eliminará las tablas existentes y las volverá a crear (útil para desarrollo, no recomendado para producción)*/
 /*@param {boolean} alter - Si es true, intentará modificar las tablas existentes para que coincidan con los modelos (recomendado para producción)*/
-const syncModels = async (force = false, alter = false) => {
+const syncDatabase = async (force = false, alter = false) => {
   try {
     //sincroniza los modelos de la base de datos, si force es true, eliminará las tablas existentes y las volverá a crear, si alter es true, intentará modificar las tablas existentes para que coincidan con los modelos
     await sequelize.sync({ force, alter });
     if (force) {
-    console.log("Modelos sincronizados con la base de datos correctamente.");
-  } else if (alter) {
-    console.log('Base de datos alterada segun los modelos')
-  } else {
-    console.log('Base de datos sincronizada correctamente')
-  }
+      console.log("Modelos sincronizados con la base de datos correctamente.");
+    } else if (alter) {
+      console.log("Base de datos alterada segun los modelos");
+    } else {
+      console.log("Base de datos sincronizada correctamente");
+    }
 
-  return true;
-} catch (error){
-  console.error('Xerror al sincronizar la base de datos:', error.message);
-  return false;
-}
-}
+    return true;
+  } catch (error) {
+    console.error("Xerror al sincronizar la base de datos:", error.message);
+    return false;
+  }
+};
+
+//Exportamos la instancia de Sequelize, la función para probar la conexión y la función para sincronizar los modelos
+module.exports = { sequelize, testConnection, syncDatabase };
