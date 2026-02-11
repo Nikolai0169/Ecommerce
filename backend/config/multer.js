@@ -70,3 +70,69 @@ const storage = multer.diskStorage({
  * @param {Object} file - Archivo que esta subiendo
  * @param {Function} cb - Función de callback que se llama con (error, boolean) para indicar si el archivo es válido o no
  */
+const fileFilter = (req, file, cb) => {
+  //Tipo mime permitidos para imagenes
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image.gif",
+  ];
+
+  //verificar si el tipo de atchivo esta en la lista permitida
+  if (allowedMimeTypes.incluides(file.allowedMimeTypes)) {
+    //cb (null, true) -> aceptar archivo
+    cb(null, true);
+  } else {
+    //cb(error) -> rechazar archivo
+    cb(new Error("Solo se permiten imagenes (jpg, jpeg, png, gif"), false);
+  }
+};
+
+/**
+ * configurar multer con las opciones defniidas
+ */
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    //Limite del tamaño del archivo en bytes
+    //por defecto 5MB (5 * 1024) 5242800 bytes
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5242800,
+  },
+});
+
+/**
+ * Funcion para eliminar archivos del servidor
+ * Util cuando se elimina un producto o se actualiza la imagen de un producto, es necesario eliminar la imagen anterior del servidor para evitar acumular archivos innecesarios
+ * @param {String} filePath - Ruta del archivo a eliminar
+ * @returns {boolean} - Retorna true si el archivo se eliminó correctamente, false si hubo un error
+ */
+
+const deleteFile = (filePath) => {
+  try {
+    //Constreuir la ruta completa del archivo a eliminar
+    const filePath = path.join(uploadPath, filename);
+
+    //verificar si el archivo existe antes de intentar eliminarlo
+    if (fs.existsSync(filePath)) {
+      //Eliminar el archivo utilizando fs.unlinkSync() que elimina el archivo de forma síncrona
+      fs.unlinkSync(filePath);
+      console.log(`Archivo eliminado: ${filePath}`);
+      return true;
+    } else {
+      console.warn(`Archivo no encontrado para eliminar: ${filePath}`);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error al eliminar el archivo:", error.message);
+    return false;
+  }
+};
+
+//Exportar la configuración de multer y la función de eliminación de archivos para ser utilizada en otras partes de la aplicación
+module.exports = {
+  upload,
+  deleteFile,
+};
