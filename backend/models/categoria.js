@@ -82,9 +82,11 @@ const Categoria = sequelize.define(
             console.log(
               `Categoría ${categoria.nombre} desactivada, desactivando subcategorías asociadas...`,
             );
+            
             //Importar modelos (aqui para evitar dependencias circulares)
             const Subcategoria = require("./subcategoria");
             const Producto = require("./producto");
+            
             //Paso 1>Desactivar todas las subcategorías asociadas a esta categoría
             const subcategorias = await Subcategoria.findAll({
               where: { categoriaId: categoria.id },
