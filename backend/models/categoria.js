@@ -126,7 +126,6 @@ const Categoria = sequelize.define(
   },
 );
 
-
 //METODOS DE INSTANCIA
 /**
  * Método de instancia para obtener el número de subcategorías activas asociadas a esta categoría
@@ -135,11 +134,12 @@ const Categoria = sequelize.define(
  * @returns {Promise<number>} El número de subcategorías activas asociadas a esta categoría
  */
 Categoria.prototype.getNumeroSubcategoriasActivas = async function () {
-    const Subcategoria = require("./subcategoria");
-    return await Subcategoria.count({
-        where: {
-            categoriaId: this.id, //Contar solo las subcategorías asociadas a esta categoría
-        }});
+  const Subcategoria = require("./subcategoria");
+  return await Subcategoria.count({
+    where: {
+      categoriaId: this.id, //Contar solo las subcategorías asociadas a esta categoría
+    },
+  });
 };
 
 //Metodo para contar el número de productos activos asociados a esta categoría
@@ -147,9 +147,13 @@ Categoria.prototype.getNumeroSubcategoriasActivas = async function () {
  * @returns {Promise<number>} El número de productos activos asociados a esta categoría
  */
 Categoria.prototype.getNumeroSubcategoriasActivas = async function () {
-    const Subcategoria = require("./subcategoria");
-    return await Subcategoria.count({
-        where: {
-            categoriaId: this.id, //Contar solo los productos asociados a esta categoría
-        }});
+  const Subcategoria = require("./subcategoria");
+  return await Subcategoria.count({
+    where: {
+      categoriaId: this.id, //Contar solo los productos asociados a esta categoría
+    },
+  });
 };
+
+//Exportar el modelo de categoría para que pueda ser utilizado en otras partes de la aplicación
+module.exports = Categoria;
