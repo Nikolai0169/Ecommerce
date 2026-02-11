@@ -78,14 +78,78 @@ const Categoria = sequelize.define(
       afterUpdate: async (categoria, options) => {
         //Verificar si el campo "activo" ha cambiado a false (desactivado)
         if (categoria.changed("activo") && !categoria.activo) {
-          console.log(
-            `Categoría ${categoria.nombre} desactivada, desactivando subcategorías asociadas...`,
-          );
-          //Importar modelos (aqui para evitar dependencias circulares)
-          const Subcategoria = require("./subcategoria");
-          const Producto = require("./producto");
+          try {
+            console.log(
+              `Categoría ${categoria.nombre} desactivada, desactivando subcategorías asociadas...`,
+            );
+            //Importar modelos (aqui para evitar dependencias circulares)
+            const Subcategoria = require("./subcategoria");
+            const Producto = require("./producto");
+            //Paso 1>Desactivar todas las subcategorías asociadas a esta categoría
+            const subcategorias = await Subcategoria.findAll({
+              where: { categoriaId: categoria.id },
+            });
+
+            for (const subcategoria of subcategorias) {
+              await subcategoria.update(
+                { activo: false },
+                { transaction: options.transaction },
+              );
+              console.log(`Subcategoría ${subcategoria.nombre} desactivada.`);
+              //Paso 2 Desactivar todos los productos asociados a estas subcategorías
+              const productos = await Producto.findAll({
+                where: { categoriaId: categoria.id },
+              });
+
+              for (const producto of productos) {
+                await producto.update(
+                  { activo: false },
+                  { transaction: options.transaction },
+                );
+                console.log(`Producto ${producto.nombre} desactivado.`);
+              }
+              console.log(
+                `categoria ${categoria.nombre} desactivada, subcategorías y productos asociados desactivados.`,
+              );
+            }
+          } catch (error) {
+            console.error(
+              `Error al desactivar subcategorías o productos asociados a la categoría ${categoria.nombre}:`,
+              error.message,
+            );
+            throw error; //Re-lanzar el error para que se maneje en la capa superior (controlador)
+          }
         }
+        //Si se activa una categoría (activo cambia a true), no se activan automáticamente las subcategorías o productos asociados, esto se deja a discreción del administrador para evitar activar subcategorías o productos que podrían no estar listos para ser activados.
       },
     },
   },
 );
+
+
+//METODOS DE INSTANCIA
+/**
+ * Método de instancia para obtener el número de subcategorías activas asociadas a esta categoría
+ * Este método se puede utilizar para mostrar información adicional sobre la categoría en la interfaz de usuario, como el número de subcategorías activas que tiene cada categoría.
+ * El método utiliza la función count de Sequelize para contar el número de subcategorías que tienen el campo "activo" establecido en true y que están asociadas a esta categoría a través del campo "categoriaId".
+ * @returns {Promise<number>} El número de subcategorías activas asociadas a esta categoría
+ */
+Categoria.prototype.getNumeroSubcategoriasActivas = async function () {
+    const Subcategoria = require("./subcategoria");
+    return await Subcategoria.count({
+        where: {
+            categoriaId: this.id, //Contar solo las subcategorías asociadas a esta categoría
+        }});
+};
+
+//Metodo para contar el número de productos activos asociados a esta categoría
+/**
+ * @returns {Promise<number>} El número de productos activos asociados a esta categoría
+ */
+Categoria.prototype.getNumeroSubcategoriasActivas = async function () {
+    const Subcategoria = require("./subcategoria");
+    return await Subcategoria.count({
+        where: {
+            categoriaId: this.id, //Contar solo los productos asociados a esta categoría
+        }});
+};
