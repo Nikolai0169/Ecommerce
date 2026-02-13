@@ -99,9 +99,9 @@ const Categoria = sequelize.define(
               );
               console.log(`Subcategoría ${subcategoria.nombre} desactivada.`);
               //Paso 2 Desactivar todos los productos asociados a estas subcategorías
-              const productos = await Producto.findAll({
-                where: { categoriaId: categoria.id },
-              });
+                const productos = await producto.findAll({
+                where: { subcategoriaId: subcategoria.id },
+                });
 
               for (const producto of productos) {
                 await producto.update(
@@ -140,19 +140,6 @@ Categoria.prototype.getNumeroSubcategoriasActivas = async function () {
   return await Subcategoria.count({
     where: {
       categoriaId: this.id, //Contar solo las subcategorías asociadas a esta categoría
-    },
-  });
-};
-
-//Metodo para contar el número de productos activos asociados a esta categoría
-/**
- * @returns {Promise<number>} El número de productos activos asociados a esta categoría
- */
-Categoria.prototype.getNumeroSubcategoriasActivas = async function () {
-  const Subcategoria = require("./subcategoria");
-  return await Subcategoria.count({
-    where: {
-      categoriaId: this.id, //Contar solo los productos asociados a esta categoría
     },
   });
 };

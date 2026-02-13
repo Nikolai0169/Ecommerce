@@ -16,7 +16,7 @@ const sequelize = require("../config/database");
  * En este caso, se define un modelo llamado "Producto" con los campos id (clave primaria, auto-incremental), nombre (cadena de texto, no nulo) y descripcion (cadena de texto).
  */
 
-const Producto = sequelize.define(
+const producto = sequelize.define(
   "Producto",
   {
     //campos de la tabla productos
@@ -97,18 +97,16 @@ const Producto = sequelize.define(
       },
     },
 
-
-
     /**
      * CategoriaId es una clave foránea que hace referencia a la categoría a la que pertenece esta subcategoría, es un entero que no puede ser nulo
      * Esta relación es importante para mantener la integridad de los datos y permitir consultas eficientes para obtener las subcategorías asociadas a una categoría específica.
      */
 
-    categoriaId: {
+    subcategoriaId: {
       type: DataTypes.INTEGER, //Tipo de dato entero
       allowNull: false, //No permite valores nulos
       references: {
-        model: "categorias", //Nombre de la tabla a la que hace referencia
+        model: "subcategorias", //Nombre de la tabla a la que hace referencia
         key: "id", //Nombre de la clave primaria de la tabla a la que hace referencia
       },
       onUpdate: "CASCADE", //Si se actualiza el id de la categoría, se actualiza automáticamente en esta tabla
@@ -133,7 +131,7 @@ const Producto = sequelize.define(
 
   {
     //Opciones del modelo
-    tableName: "subcategorias", //Nombre de la tabla en la base de datos, se especifica para evitar que Sequelize pluralice el nombre del modelo (por defecto, Sequelize pluraliza los nombres de los modelos para crear las tablas, por ejemplo, el modelo "Subcategoria" se pluralizaría a "Subcategorias")
+    tableName: "productos", //Nombre de la tabla en la base de datos, se especifica para evitar que Sequelize pluralice el nombre del modelo (por defecto, Sequelize pluraliza los nombres de los modelos para crear las tablas, por ejemplo, el modelo "Subcategoria" se pluralizaría a "Subcategorias")
     timestamps: true, //Agrega automáticamente campos createdAt y updatedAt para registrar la fecha de creación y actualización de cada registro
 
     /**
@@ -141,16 +139,24 @@ const Producto = sequelize.define(
      */
     indexes: [
       {
-        //Indice para buscar subcategorías por nombre dentro de una categoría
-        fields: ["nombre", "categoriaId"], //Campos que forman el índice compuesto
+        //Indice para buscar productos por nombre dentro de una subcategoría
+        fields: ["subcategoriaId"], //Campos que forman el índice compuesto
       },
       {
-        //Indice compesto para garantizar que no existan subcategorías con el mismo nombre dentro de la misma categoría
-        //Permite que existan subcategorías con el mismo nombre en diferentes categorías, pero no permite que existan subcategorías con el mismo nombre dentro de la misma categoría
-        unique: true, //El índice es único, lo que significa que no se permiten valores duplicados para la combinación de los campos "nombre" y "categoriaId"
-        fields: ["nombre", "categoriaId"], //Campos que forman el índice compuesto
-        name: "nombre_categoria_unique", //Nombre del índice, se especifica para facilitar su identificación en la base de datos y en los mensajes de error cuando se viola la restricción de unicidad
+        //Indice compesto para garantizar que no existan productos con el mismo nombre dentro de la misma subcategoría
+        //Permite que existan productos con el mismo nombre en diferentes subcategorías, pero no permite que existan productos con el mismo nombre dentro de la misma subcategoría
+        
+        unique: true, //El índice es único, lo que significa que no se permiten valores duplicados para la combinación de los campos "nombre" y "subcategoriaId"
+        fields: ["categoriaId"], //Campos que forman el índice compuesto
       },
+      {
+        //indice para buscar productos activos dentro de una subcategoría
+        fields: ["activo"], //Campos que forman el índice compuesto
+      },
+      {
+        //Indice para buscar productos por nombre
+        fields: ["nombre"], //Campos que forman el índice compuesto
+      }
     ],
 
     /**

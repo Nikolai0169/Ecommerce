@@ -10,7 +10,7 @@ const { DataTypes } = require("sequelize");
 //Importar la instancia de Sequelize para definir el modelo
 const sequelize = require("../config/database");
 const Categoria = require("./categoria");
-const Producto = require("./producto");
+const producto = require("./producto");
 
 /**
  * Definir el modelo de subcategoría utilizando sequelize.define()
@@ -140,12 +140,12 @@ const subcategoria = sequelize.define(
         //Verificar si el campo "activo" ha cambiado a false (desactivado)
 
         //Importar modelos (aqui para evitar dependencias circulares)
-        const Producto = require("./producto");
+        const producto = require("./producto");
 
         if (subcategoria.changed("activo") && !subcategoria.activo) {
           try {
             //Paso 1>Desactivar todas las subcategorías asociadas a esta categoría
-            const productos = await Producto.findAll({
+            const productos = await producto.findAll({
               where: { subcategoriaId: subcategoria.id },
             });
 
@@ -154,7 +154,7 @@ const subcategoria = sequelize.define(
                 { activo: false },
                 { transaction: options.transaction },
               );
-              console.log(`Producto ${producto.nombre} desactivado.`);
+              console.log(`producto ${producto.nombre} desactivado.`);
             }
             console.log(`Subcategoría y productos asociados desactivados.`);
           } catch (error) {
@@ -178,8 +178,8 @@ const subcategoria = sequelize.define(
  * @returns {Promise<number>} El número de productos activos asociados a esta subcategoría
  */
 subcategoria.prototype.contarproductos = async function () {
-  const Subcategoria = require("./subcategoria");
-  return await Subcategoria.count({
+  const producto = require("./producto");
+  return await producto.count({
     where: {
       subcategoriaId: this.id, //Contar solo los productos asociados a esta subcategoría
     },
