@@ -131,7 +131,7 @@ const producto = sequelize.define(
 
   {
     //Opciones del modelo
-    tableName: "productos", //Nombre de la tabla en la base de datos, se especifica para evitar que Sequelize pluralice el nombre del modelo (por defecto, Sequelize pluraliza los nombres de los modelos para crear las tablas, por ejemplo, el modelo "Subcategoria" se pluralizaría a "Subcategorias")
+    tableName: "productos", //Nombre de la tabla en la base de datos, se especifica para evitar que Sequelize pluralice el nombre del modelo (por defecto, Sequelize pluraliza los nombres de los modelos para crear las tablas, por ejemplo, el modelo "subcategoria" se pluralizaría a "subcategorias")
     timestamps: true, //Agrega automáticamente campos createdAt y updatedAt para registrar la fecha de creación y actualización de cada registro
 
     /**
@@ -145,7 +145,7 @@ const producto = sequelize.define(
       {
         //Indice compesto para garantizar que no existan productos con el mismo nombre dentro de la misma subcategoría
         //Permite que existan productos con el mismo nombre en diferentes subcategorías, pero no permite que existan productos con el mismo nombre dentro de la misma subcategoría
-        
+
         unique: true, //El índice es único, lo que significa que no se permiten valores duplicados para la combinación de los campos "nombre" y "subcategoriaId"
         fields: ["categoriaId"], //Campos que forman el índice compuesto
       },
@@ -156,7 +156,7 @@ const producto = sequelize.define(
       {
         //Indice para buscar productos por nombre
         fields: ["nombre"], //Campos que forman el índice compuesto
-      }
+      },
     ],
 
     /**
@@ -164,61 +164,70 @@ const producto = sequelize.define(
      */
     hooks: {
       /**
-       * BeforeCreate se ejecuta antes de crear un nuevo registro de categoría, este hook verifica si el campo "activo" está establecido en false (desactivado) y si es así, lanza un error para evitar que se creen categorías desactivadas, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
+       * BeforeCreate se ejecuta antes de crear un nuevo registro de producto, este hook verifica que la subcategoría a la que pertenece el producto esté activa antes de permitir la creación del producto, esto ayuda a mantener la integridad de los datos y evitar problemas con productos asociados a subcategorías desactivadas.
+       * Si la subcategoría está desactivada, se lanza un error y no se permite crear el producto, esto es importante para evitar problemas de integridad de datos y garantizar que los productos solo se asocien a subcategorías activas.
+       * Este hook también verifica que la categoría a la que pertenece la subcategoría esté activa, para evitar problemas de integridad de datos con productos asociados a categorías desactivadas.
        * verifica que la categoria no se cree con el campo "activo" establecido en false, lo que podría causar problemas de integridad de datos si se crean subcategorías o productos asociados a una categoría que ya está desactivada.
        */
-      beforeCreate: async (subcategoria) => {
-        const Categoria = require("./categoria");
+      beforeCreate: async (producto) => {
+        const categoria = require("./categoria");
+        const subcategoria = require("./subcategoria");
+
         //Buscar la categoría asociada a esta subcategoría para verificar su estado
-        const categoria = await Categoria.findByPk(subcategoria.categoriaId);
+        const categoria = await Categoria.findByPk(producto.categoriaId);
 
         if (!categoria) {
           throw new Error(
-            "La categoría asociada a esta subcategoría no existe", //Mensaje de error personalizado si se intenta crear una subcategoría con una categoría que no existe
+            "La categoría asociada a este producto no existe", //Mensaje de error personalizado si se intenta crear un producto con una categoría que no existe
           );
         }
 
         if (!categoria.activo) {
           throw new Error(
-            "No se puede crear una subcategoría para una categoría desactivada", //Mensaje de error personalizado si se intenta crear una subcategoría para una categoría que está desactivada
+            "No se puede crear un producto para una categoría desactivada", //Mensaje de error personalizado si se intenta crear un producto para una categoría que está desactivada
+          );
+        }
+
+        //Buscar la subcategoría padre
+        const subcategoria = await subcategoria.findByPk(
+          producto.subcategoriaId,
+        );
+
+        if (!subcategoria) {
+          throw new Error(
+            "La subcategoría asociada a este producto no existe", //Mensaje de error personalizado si se intenta crear un producto con una subcategoría que no existe
+          );
+        }
+
+        if (!subcategoria.activo) {
+          throw new Error(
+            "No se puede crear un producto para una subcategoría desactivada", //Mensaje de error personalizado si se intenta crear un producto para una subcategoría que está desactivada
+          );
+        }
+
+        //validar que la subcategoria pertenece a una categoria activa
+        if (subcategoria.categoriaId !== categoria.id) {
+          throw new Error(
+            "La subcategoría asociada a este producto no pertenece a la categoría especificada", //Mensaje de error personalizado si se intenta crear un producto con una subcategoría que no pertenece a la categoría especificada
           );
         }
       },
+
       /**
-       * AfterUpdate se ejecuta después de actualizar un registro de categoría, este hook verifica si el campo "activo" ha cambiado a false (desactivado) y si es así, desactiva todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos.
-       * si se desactiva una categoría, se desactivan automáticamente todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas. Esto se hace en un hook "afterUpdate" para asegurarse de que la categoría ya esté actualizada antes de intentar desactivar las subcategorías asociadas.
+       * BeforeDestroy se ejecuta antes de eliminar un registro de producto, este hook verifica que la subcategoría a la que pertenece el producto esté activa antes de permitir la eliminación del producto, esto ayuda a mantener la integridad de los datos y evitar problemas con productos asociados a subcategorías desactivadas.
+       * Si la subcategoría está desactivada, se lanza un error y no se permite eliminar el producto, esto es importante para evitar problemas de integridad de datos y garantizar que los productos solo se eliminen cuando estén asociados a subcategorías activas.
+       * Este hook también verifica que la categoría a la que pertenece la subcategoría esté activa, para evitar problemas de integridad de datos con productos asociados a categorías desactivadas.
+       * elimina la imagen del producto del servidor si el producto se elimina, esto es importante para evitar acumular archivos de imagen huérfanos en el servidor que ya no están asociados a ningún producto.
        */
-      afterUpdate: async (subcategoria, options) => {
-        //Verificar si el campo "activo" ha cambiado a false (desactivado)
-
-        //Importar modelos (aqui para evitar dependencias circulares)
-        const Producto = require("./producto");
-
-        if (subcategoria.changed("activo") && !subcategoria.activo) {
-          try {
-            //Paso 1>Desactivar todas las subcategorías asociadas a esta categoría
-            const productos = await Producto.findAll({
-              where: { subcategoriaId: subcategoria.id },
-            });
-
-            for (const producto of productos) {
-              await producto.update(
-                { activo: false },
-                { transaction: options.transaction },
-              );
-              console.log(`Producto ${producto.nombre} desactivado.`);
-            }
-            console.log(`Subcategoría y productos asociados desactivados.`);
-          } catch (error) {
-            console.error(
-              `Error al desactivar productos asociados a la subcategoría:`,
-              error.message,
-            );
-            throw error; //Re-lanzar el error para que se maneje en la capa superior (controlador)
+      beforeDestroy: async (producto) => {
+        if (producto.imagen) {
+          const { deleteFile } = require("../config/multer");
+          //intenta eliminar la imagen del producto del servidor, si ocurre un error durante la eliminación, se captura y se muestra un mensaje de error en la consola, pero no se lanza un error para evitar interrumpir el proceso de eliminación del producto
+          const eliminado = await deleteFile(producto.imagen);
+          if (!eliminado) {
+            console.log(`Imagen eliminada: ${producto.imagen}`);
           }
         }
-
-        //Si se activa una categoría (activo cambia a true), no se activan automáticamente las subcategorías o productos asociados, esto se deja a discreción del administrador para evitar activar subcategorías o productos que podrían no estar listos para ser activados.
       },
     },
   },
@@ -226,17 +235,49 @@ const producto = sequelize.define(
 
 //METODOS DE INSTANCIA
 /**
- * Método de instancia para obtener el número de subcategorías activas asociadas a esta categoría
- * @returns {Promise<number>} El número de productos activos asociados a esta subcategoría
+ * Método de instancia para obtener la url completa de la imagen del producto, este método construye la URL completa de la imagen del producto utilizando el nombre del archivo almacenado en la base de datos y la ruta de almacenamiento de las imágenes en el servidor, esto es útil para mostrar la imagen del producto en la interfaz de usuario sin tener que almacenar la URL completa en la base de datos.
+ * @returns {string|null} La URL completa de la imagen del producto o null si no tiene imagen
  */
-subcategoria.prototype.contarproductos = async function () {
-  const Subcategoria = require("./subcategoria");
-  return await Subcategoria.count({
-    where: {
-      subcategoriaId: this.id, //Contar solo los productos asociados a esta subcategoría
-    },
-  });
+
+producto.prototype.obtenerUrlImagen = function () {
+  if (this.imagen) {
+    return null; //Construir la URL completa de la imagen utilizando la ruta de almacenamiento y el nombre del archivo, por ejemplo: http://localhost:3000/uploads/producto-12345.jpg
+  }
+
+  const baseUrl = process.env.FRONTEND_URL || "http://localhost:5000"; //Obtener la URL base del servidor desde las variables de entorno o usar un valor por defecto
+  return `${baseUrl}/uploads/${this.imagen}`; //Construir la URL completa de la imagen utilizando la URL base, la ruta de almacenamiento y el nombre del archivo, por ejemplo: http://localhost:5000/uploads/producto-12345.jpg
 };
+
+/**
+ * metodo para verificar si el producto está en stock, este método devuelve true si el stock del producto es mayor que 0, lo que indica que el producto está disponible para la venta, y devuelve false si el stock es 0 o menor, lo que indica que el producto no está disponible para la venta.
+ * Este método es útil para mostrar información sobre la disponibilidad del producto en la interfaz de usuario y para gestionar el inventario de productos en la aplicación.
+ * @param {number} cantidad - La cantidad que se desea verificar si está en stock suficiente
+ * @returns {boolean} true si el producto está en stock, false si no lo está
+ */
+producto.prototype.HayStock = function (cantidad = 3) {
+  return this.stock >= cantidad; //Devuelve true si el stock del producto es mayor o igual a la cantidad especificada, lo que indica que el producto está disponible para la venta, y devuelve false si el stock es menor que la cantidad especificada, lo que indica que el producto no está disponible para la venta.
+};
+
+/**
+ * Metodo para reducir el stock del producto, este método se utiliza para reducir la cantidad de stock disponible de un producto después de realizar una venta, por ejemplo, si se vende una cantidad de 3 unidades de un producto, este método se puede llamar para reducir el stock del producto en 3 unidades, lo que ayuda a mantener el inventario actualizado y evitar vender productos que no están disponibles.
+ * util para gestionar el inventario de productos en la aplicación y garantizar que el stock de los productos se mantenga actualizado después de cada venta.
+ * @param {number} cantidad - La cantidad que se desea reducir del stock del producto
+ * @returns {Promise<producto>} El producto actualizado con el nuevo stock reducido
+ */
+producto.prototype.reducirStock = async function (cantidad) {
+    if (this.HayStock(cantidad)) {
+        throw new Error(`No hay suficiente stock para reducir la cantidad de ${cantidad} unidades del producto ${this.nombre}`); //Mensaje de error personalizado si se intenta reducir el stock en una cantidad mayor a la disponible
+    }
+    this.stock -= cantidad; //Reducir el stock del producto en la cantidad especificada
+    await this.save(); //Guardar los cambios en la base de datos
+};
+
+/**
+ * Metodo para aumentar el stock del producto, este método se utiliza para aumentar la cantidad de stock disponible de un producto después de recibir una nueva entrega o devolución, por ejemplo, si se recibe una nueva entrega de 10 unidades de un producto, este método se puede llamar para aumentar el stock del producto en 10 unidades, lo que ayuda a mantener el inventario actualizado y garantizar que los productos estén disponibles para la venta.
+ * util para gestionar el inventario de productos en la aplicación y garantizar que el stock de los productos se mantenga actualizado después de cada entrega o devolución.
+ * @param {number} cantidad - La cantidad que se desea aumentar del stock del producto
+ * @return {Promise<producto>} El producto actualizado con el nuevo stock aumentado
+ */
 
 /**
  * Metodo para obtener la categoria a la que pertenece esta subcategoría, se define como un método de instancia para facilitar su uso en otras partes de la aplicación, por ejemplo, al mostrar los detalles de una subcategoría en la interfaz de usuario.
@@ -248,4 +289,4 @@ subcategoria.prototype.obtenerCategoria = async function () {
 };
 
 //Exportar el modelo de subcategoría para que pueda ser utilizado en otras partes de la aplicación
-module.exports = subcategoria;
+module.exports = producto;

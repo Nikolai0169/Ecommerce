@@ -84,11 +84,11 @@ const Categoria = sequelize.define(
             );
             
             //Importar modelos (aqui para evitar dependencias circulares)
-            const Subcategoria = require("./subcategoria");
+            const subcategoria = require("./subcategoria");
             const Producto = require("./producto");
             
             //Paso 1>Desactivar todas las subcategorías asociadas a esta categoría
-            const subcategorias = await Subcategoria.findAll({
+            const subcategorias = await subcategoria.findAll({
               where: { categoriaId: categoria.id },
             });
 
@@ -135,9 +135,9 @@ const Categoria = sequelize.define(
  * El método utiliza la función count de Sequelize para contar el número de subcategorías que tienen el campo "activo" establecido en true y que están asociadas a esta categoría a través del campo "categoriaId".
  * @returns {Promise<number>} El número de subcategorías activas asociadas a esta categoría
  */
-Categoria.prototype.getNumeroSubcategoriasActivas = async function () {
-  const Subcategoria = require("./subcategoria");
-  return await Subcategoria.count({
+Categoria.prototype.getNumerosubcategoriasActivas = async function () {
+  const subcategoria = require("./subcategoria");
+  return await subcategoria.count({
     where: {
       categoriaId: this.id, //Contar solo las subcategorías asociadas a esta categoría
     },

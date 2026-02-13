@@ -15,7 +15,7 @@ const producto = require("./producto");
 /**
  * Definir el modelo de subcategoría utilizando sequelize.define()
  * El primer argumento es el nombre del modelo (en singular), el segundo argumento es un objeto que define los campos y sus tipos de datos, y el tercer argumento es un objeto de opciones para configurar el modelo.
- * En este caso, se define un modelo llamado "Subcategoria" con los campos id (clave primaria, auto-incremental), nombre (cadena de texto, no nulo) y descripcion (cadena de texto).
+ * En este caso, se define un modelo llamado "subcategoria" con los campos id (clave primaria, auto-incremental), nombre (cadena de texto, no nulo) y descripcion (cadena de texto).
  */
 
 const subcategoria = sequelize.define(
@@ -55,7 +55,7 @@ const subcategoria = sequelize.define(
     },
 
     /**
-     * CategoriaId es una clave foránea que hace referencia a la categoría a la que pertenece esta subcategoría, es un entero que no puede ser nulo
+     * categoriaId es una clave foránea que hace referencia a la categoría a la que pertenece esta subcategoría, es un entero que no puede ser nulo
      * Esta relación es importante para mantener la integridad de los datos y permitir consultas eficientes para obtener las subcategorías asociadas a una categoría específica.
      */
 
@@ -87,7 +87,7 @@ const subcategoria = sequelize.define(
   },
   {
     //Opciones del modelo
-    tableName: "subcategorias", //Nombre de la tabla en la base de datos, se especifica para evitar que Sequelize pluralice el nombre del modelo (por defecto, Sequelize pluraliza los nombres de los modelos para crear las tablas, por ejemplo, el modelo "Subcategoria" se pluralizaría a "Subcategorias")
+    tableName: "subcategorias", //Nombre de la tabla en la base de datos, se especifica para evitar que Sequelize pluralice el nombre del modelo (por defecto, Sequelize pluraliza los nombres de los modelos para crear las tablas, por ejemplo, el modelo "subcategoria" se pluralizaría a "subcategorias")
     timestamps: true, //Agrega automáticamente campos createdAt y updatedAt para registrar la fecha de creación y actualización de cada registro
 
     /**
@@ -112,7 +112,7 @@ const subcategoria = sequelize.define(
      */
     hooks: {
       /**
-       * BeforeCreate se ejecuta antes de crear un nuevo registro de categoría, este hook verifica si el campo "activo" está establecido en false (desactivado) y si es así, lanza un error para evitar que se creen categorías desactivadas, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
+       * beforeCreate se ejecuta antes de crear un nuevo registro de categoría, este hook verifica si el campo "activo" está establecido en false (desactivado) y si es así, lanza un error para evitar que se creen categorías desactivadas, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
        * verifica que la categoria no se cree con el campo "activo" establecido en false, lo que podría causar problemas de integridad de datos si se crean subcategorías o productos asociados a una categoría que ya está desactivada.
        */
       beforeCreate: async (subcategoria) => {
@@ -133,7 +133,7 @@ const subcategoria = sequelize.define(
         }
       },
       /**
-       * AfterUpdate se ejecuta después de actualizar un registro de categoría, este hook verifica si el campo "activo" ha cambiado a false (desactivado) y si es así, desactiva todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos.
+       * afterUpdate se ejecuta después de actualizar un registro de categoría, este hook verifica si el campo "activo" ha cambiado a false (desactivado) y si es así, desactiva todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos.
        * si se desactiva una categoría, se desactivan automáticamente todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas. Esto se hace en un hook "afterUpdate" para asegurarse de que la categoría ya esté actualizada antes de intentar desactivar las subcategorías asociadas.
        */
       afterUpdate: async (subcategoria, options) => {
