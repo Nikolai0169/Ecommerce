@@ -89,8 +89,14 @@ const Producto = sequelize.define(
     imagen: {
       type: DataTypes.STRING(255), //Tipo de dato cadena de texto con un máximo de 255 caracteres
       allowNull: true, //Permite valores nulos, ya que no todos los productos pueden tener una imagen asociada
+      validate: {
+        is: {
+          args: /\.(jpg|jpeg|png|gif)$/i, //Expresión regular para validar que el nombre del archivo tenga una extensión de imagen válida (jpg, jpeg, png o gif)
+          msg: "El nombre del archivo de imagen debe tener una extensión válida (jpg, jpeg, png o gif)", //Mensaje de error personalizado si se intenta crear un producto con un nombre de archivo de imagen que no tiene una extensión válida
+        },
+      },
     },
-    
+
 
 
     /**
