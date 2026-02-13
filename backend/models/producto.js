@@ -278,15 +278,11 @@ producto.prototype.reducirStock = async function (cantidad) {
  * @param {number} cantidad - La cantidad que se desea aumentar del stock del producto
  * @return {Promise<producto>} El producto actualizado con el nuevo stock aumentado
  */
-
-/**
- * Metodo para obtener la categoria a la que pertenece esta subcategoría, se define como un método de instancia para facilitar su uso en otras partes de la aplicación, por ejemplo, al mostrar los detalles de una subcategoría en la interfaz de usuario.
- * @returns {Promise<Categoria>} La categoría a la que pertenece esta subcategoría
- */
-subcategoria.prototype.obtenerCategoria = async function () {
-  const Categoria = require("./categoria");
-  return await Categoria.findByPk(this.categoriaId); //Buscar la categoría asociada a esta subcategoría utilizando su clave foránea "categoriaId"
+producto.prototype.aumentarStock = async function (cantidad) {
+    this.stock += cantidad; //Aumentar el stock del producto en la cantidad especificada
+    return await this.save(); //Guardar los cambios en la base de datos y devolver el producto actualizado
 };
+
 
 //Exportar el modelo de subcategoría para que pueda ser utilizado en otras partes de la aplicación
 module.exports = producto;
