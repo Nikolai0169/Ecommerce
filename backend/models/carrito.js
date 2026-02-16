@@ -9,12 +9,11 @@ const { DataTypes } = require("sequelize");
 
 //Importar la instancia de Sequelize para definir el modelo
 const sequelize = require("../config/database");
-const { table, timeStamp } = require("console");
 
 /**
- * Definir el modelo de categoría utilizando sequelize.define()
+ * Definir el modelo de carrito utilizando sequelize.define()
  * El primer argumento es el nombre del modelo (en singular), el segundo argumento es un objeto que define los campos y sus tipos de datos, y el tercer argumento es un objeto de opciones para configurar el modelo.
- * En este caso, se define un modelo llamado "Categoria" con los campos id (clave primaria, auto-incremental), nombre (cadena de texto, no nulo) y descripcion (cadena de texto).
+ * En este caso, se define un modelo llamado "Carrito" con los campos id (clave primaria, auto-incremental), usuarioId (clave foránea a la tabla usuarios), productoId (clave foránea a la tabla productos) y cantidad (número entero, no nulo).
  */
 
 const carrito = sequelize.define(
