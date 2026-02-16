@@ -17,8 +17,8 @@ const { table, timeStamp } = require("console");
  * En este caso, se define un modelo llamado "Categoria" con los campos id (clave primaria, auto-incremental), nombre (cadena de texto, no nulo) y descripcion (cadena de texto).
  */
 
-const Carrito = sequelize.define(
-  "Carrito",
+const carrito = sequelize.define(
+  "carrito",
   {
     //campos de la tabla carritos
     //Id Identificador único del carrito, es la clave primaria y se auto-incrementa
@@ -180,13 +180,46 @@ const Carrito = sequelize.define(
 //METODOS DE INSTANCIA
 /**
  * Método de instancia para obtener el número de subcategorías activas asociadas a esta categoría
- * @returns {Promise<number>} El número de productos activos asociados a esta subcategoría
+ * @returns {number} - Subtotal de productos asociados a esta subcategoría (precio unitario * cantidad)
  */
-subcategoria.prototype.contarproductos = async function () {
-  const producto = require("./producto");
-  return await producto.count({
-    where: {
-      subcategoriaId: this.id, //Contar solo los productos asociados a esta subcategoría
-    },
-  });
+carrito.prototype.calcularSubtotal = function () {
+  return parseFloa(this.precioUnitario) * this.cantidad;
 };
+
+/**
+ * Metodo para actualizar la cantidad de un item de carrito, este método verifica si el nuevo valor de cantidad es válido (un número entero mayor o igual a 1) y si hay suficiente stock disponible del producto asociado antes de actualizar la cantidad en el carrito, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que podrían no tener suficiente stock para satisfacer la cantidad solicitada.
+ * @param {number} nuevaCantidad - La nueva cantidad que se desea establecer para este item de carrito
+ * @returns {Promise} Item actualizado con la nueva cantidad si la actualización fue exitosa, o un error si la nueva cantidad no es válida o si no hay suficiente stock disponible del producto asociado.
+ */
+carrito.prototype.actualizarCantidad = async function (nuevaCantidad) {
+  const producto = require("./producto");
+
+  const prducto = await producto.findByPk(this.productoId);
+
+  if (!prducto.hayStock(nuevaCantidad)) {
+    throw new Error(
+      `Stock insuficiente, solo hay ${prducto.stock} unidades disponibles`,
+    );
+  }
+  this.cantidad = nuevaCantidad;
+  return await this.save();
+};
+
+/**
+ * Metodo para obtener el carrito completo de un usuario, este método busca todos los items de carrito asociados al ID del usuario proporcionado, incluyendo la información del producto asociado a cada item de carrito, esto permite obtener una vista completa del carrito de compras de un usuario, incluyendo los detalles de cada producto agregado al carrito.
+ * @param {number} usuarioId - El ID del usuario para el cual se desea obtener el carrito completo
+ * @returns {Promise} Un array de items de carrito con la información del producto asociado a cada item, o un error si no se encuentra ningún item de carrito para el usuario proporcionado.
+ */
+carrito.obtenerCarritoUsuario = async function (usuarioId) {
+  const producto = require("./producto");
+  return await carrito.findAll({
+    where: { usuarioId },
+    include: [
+      {
+        model: producto,
+        as: 'producto'
+      },
+    ],
+    order: [['createdAt', 'DESC']] //Ordenar por fecha de creación, el item más reciente primero
+  });
+}
