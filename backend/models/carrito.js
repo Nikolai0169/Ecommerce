@@ -115,10 +115,11 @@ const Carrito = sequelize.define(
             name: 'usuario_producto_unique'
         }
 
-    ]
+    ],
         /**
      * Hooks acciones automaticas que se ejecutan en ciertos momentos del ciclo de vida de un modelo, en este caso se define un hook "beforeUpdate" que se ejecuta antes de actualizar un registro de categoría, este hook verifica si el campo "activo" ha cambiado a false (desactivado) y si es así, desactiva todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos.
      */
+    
     hooks: {
       /**
        * beforeCreate se ejecuta antes de crear un nuevo registro de categoría, este hook verifica si el campo "activo" está establecido en false (desactivado) y si es así, lanza un error para evitar que se creen categorías desactivadas, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
@@ -194,6 +195,3 @@ subcategoria.prototype.contarproductos = async function () {
     },
   });
 };
-
-}
-)
