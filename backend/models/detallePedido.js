@@ -207,18 +207,14 @@ detallePedido.calcularTotalPedido = async function (pedidoId) {
   return total;
 };
 
-carrito.obtenerCarritoUsuario = async function (usuarioId) {
-  const producto = require("./producto");
-  return await carrito.findAll({
-    where: { usuarioId },
-    include: [
-      {
-        model: producto,
-        as: "producto",
-      },
-    ],
-    order: [["createdAt", "DESC"]], //Ordenar por fecha de creación, el item más reciente primero
-  });
+/**
+ * Metodo para obtener el ressumen de productos mas vendidos, este método consulta la base de datos para obtener un resumen de los productos más vendidos, incluyendo el ID del producto, el nombre del producto y la cantidad total vendida, esto permite obtener información valiosa sobre los productos más populares entre los usuarios y tomar decisiones informadas sobre el inventario y las estrategias de marketing.
+ * @param {number} limit - El número máximo de productos más vendidos que se desea obtener en el resumen, este parámetro permite limitar la cantidad de productos que se incluyen en el resumen para enfocarse en los productos más populares.
+ * @return {Promise<Array>} Un array de objetos que representan los productos más vendidos, cada objeto incluye el ID del producto, el nombre del producto y la cantidad total vendida, o un error si no se encuentra ningún detalle de pedido para calcular el resumen de productos más vendidos.
+ */
+detallePedido.obtenerProductosMasVendidos = async function (limit = 10) {
+  const {sequelize } = require("../config/database");
+  return await this.findAll({;
 };
 
 /**
