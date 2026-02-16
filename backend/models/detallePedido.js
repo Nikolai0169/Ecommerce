@@ -10,6 +10,7 @@ const { DataTypes } = require("sequelize");
 
 //Importar la instancia de Sequelize para definir el modelo
 const sequelize = require("../config/database");
+const { parse } = require("node:path");
 
 /**
  * Definir el modelo de detalle de pedido utilizando sequelize.define, este método se utiliza para definir un nuevo modelo en Sequelize, el primer argumento es el nombre del modelo (en singular), el segundo argumento es un objeto que define los campos y sus tipos de datos, y el tercer argumento es un objeto de opciones para configurar el modelo.
@@ -134,16 +135,15 @@ const detallePedido = sequelize.define(
     hooks: {
       /**
        * beforeCreate se ejecuta antes de crear un nuevo detalle de pedido, este hook busca el producto asociado a este detalle de pedido para verificar su estado (si está activo y si hay suficiente stock disponible) antes de permitir la creación del detalle de pedido, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que podrían estar desactivados o no tener suficiente stock para satisfacer la cantidad solicitada en el detalle de pedido.
-        * Si el producto asociado a este detalle de pedido no existe, se lanza un error con un mensaje personalizado indicando que el producto no existe.
-        * Si el producto asociado a este detalle de pedido está desactivado, se lanza un error con un mensaje personalizado indicando que no se puede crear un detalle de pedido para un producto desactivado.
-        * Si la cantidad solicitada en el detalle de pedido excede el stock disponible del producto asociado, se lanza un error con un mensaje personalizado indicando que el stock es insuficiente y mostrando la cantidad disponible.
-        * Si todas las verificaciones son exitosas, se guarda el precio unitario del producto al momento de agregarlo al detalle de pedido para mantener el precio aunque el producto cambie de precio en el futuro.
+       * Si el producto asociado a este detalle de pedido no existe, se lanza un error con un mensaje personalizado indicando que el producto no existe.
+       * Si el producto asociado a este detalle de pedido está desactivado, se lanza un error con un mensaje personalizado indicando que no se puede crear un detalle de pedido para un producto desactivado.
+       * Si la cantidad solicitada en el detalle de pedido excede el stock disponible del producto asociado, se lanza un error con un mensaje personalizado indicando que el stock es insuficiente y mostrando la cantidad disponible.
+       * Si todas las verificaciones son exitosas, se guarda el precio unitario del producto al momento de agregarlo al detalle de pedido para mantener el precio aunque el producto cambie de precio en el futuro.
        */
       beforeCreate: (detalle) => {
         //Calcular el subtotal a partir del precio unitario * cantidad
-        detalle.subtotal = parseFloat(detalle.precioUnitario) * detalle.cantidad;
-        
-
+        detalle.subtotal =
+          parseFloat(detalle.precioUnitario) * detalle.cantidad;
       },
       /**
        * beforeUpdate se ejecuta antes de actualizar un registro de detalle de pedido, este hook verifica si el campo "cantidad" ha cambiado a false (desactivado) y si es así, busca el producto asociado a este detalle de pedido para verificar su estado (si está activo y si hay suficiente stock disponible) antes de permitir la actualización del detalle de pedido, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que podrían estar desactivados o no tener suficiente stock para satisfacer la cantidad solicitada en el detalle de pedido.
@@ -154,9 +154,9 @@ const detallePedido = sequelize.define(
       BeforeUpdate: (detalle) => {
         //Verificar si el campo "PrecioUnitario" ha cambiado a false (desactivado)
 
-        if (detalle.changed('PrecioUnitario') || detalle.changed('cantidad')) {
-            detalle.subtotal = parseFloat(detalle.precioUnitario) * detalle.cantidad;
-
+        if (detalle.changed("PrecioUnitario") || detalle.changed("cantidad")) {
+          detalle.subtotal =
+            parseFloat(detalle.precioUnitario) * detalle.cantidad;
         }
       },
     },
@@ -179,30 +179,30 @@ detallePedido.prototype.calcularSubtotal = function () {
  * @returns {Promise<Array>} Un array de detalles de pedido creados a partir de los items de carrito proporcionados, o un error si alguno de los productos asociados a los items de carrito no existe, está desactivado o no tiene suficiente stock disponible para satisfacer la cantidad solicitada en el carrito.
  */
 detallePedido.crearDesdeCarrito = async function (pedidoID, itemsCarrito) {
-    const detalles = [];
-    for (const item of itemsCarrito) {
-        const detalle = await detallePedido.create({
-            pedidoId: pedidoID,
-            productoId: item.productoId,
-            cantidad: item.cantidad,
-            precioUnitario: item.precioUnitario,
-
-        });    
-        detalles.push(detalle);
-    }
-    return detalles;
+  const detalles = [];
+  for (const item of itemsCarrito) {
+    const detalle = await detallePedido.create({
+      pedidoId: pedidoID,
+      productoId: item.productoId,
+      cantidad: item.cantidad,
+      precioUnitario: item.precioUnitario,
+    });
+    detalles.push(detalle);
+  }
+  return detalles;
 };
 
 /**
-* Metodo para calcular el total del pedido a partir de los detalles del pedido, este método toma un array de detalles de pedido como argumento, calcula el subtotal de cada detalle de pedido utilizando el método calcularSubtotal() y luego suma todos los subtotales para obtener el total del pedido, esto permite obtener el monto total que el usuario tendría que pagar por su pedido en función de los detalles del pedido asociados a ese pedido.
-* @param {number} pedidoID - El ID del pedido para el cual se desea calcular el total del pedido
-* @returns {promise<number>} El total del pedido calculado a partir de los detalles del pedido asociados al ID del pedido proporcionado, o un error si no se encuentra ningún detalle de pedido para el ID de pedido proporcionado.
+ * Metodo para calcular el total del pedido a partir de los detalles del pedido, este método toma un array de detalles de pedido como argumento, calcula el subtotal de cada detalle de pedido utilizando el método calcularSubtotal() y luego suma todos los subtotales para obtener el total del pedido, esto permite obtener el monto total que el usuario tendría que pagar por su pedido en función de los detalles del pedido asociados a ese pedido.
+ * @param {number} pedidoId - El ID del pedido para el cual se desea calcular el total del pedido
+ * @returns {promise<number>} El total del pedido calculado a partir de los detalles del pedido asociados al ID del pedido proporcionado, o un error si no se encuentra ningún detalle de pedido para el ID de pedido proporcionado.
  */
-detallePedido.calcularTotalPedido = async function (pedidoID) {
-  const detalles = await detallePedido.findAll({ where: { pedidoId: pedidoID } });
+detallePedido.calcularTotalPedido = async function (pedidoId) {
+  const detalles = await this.findAll({ where: { pedidoId } });
+
   let total = 0;
   for (const detalle of detalles) {
-    total += detalle.calcularSubtotal();
+    total += parseFloat(detalle.Subtotal()); //Suma el subtotal de cada detalle al total
   }
   return total;
 };
