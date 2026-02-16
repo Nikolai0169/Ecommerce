@@ -11,6 +11,7 @@ const { DataTypes } = require("sequelize");
 //Importar la instancia de Sequelize para definir el modelo
 const sequelize = require("../config/database");
 const { parse } = require("node:path");
+const { group } = require("node:console");
 
 /**
  * Definir el modelo de detalle de pedido utilizando sequelize.define, este método se utiliza para definir un nuevo modelo en Sequelize, el primer argumento es el nombre del modelo (en singular), el segundo argumento es un objeto que define los campos y sus tipos de datos, y el tercer argumento es un objeto de opciones para configurar el modelo.
@@ -212,34 +213,19 @@ detallePedido.calcularTotalPedido = async function (pedidoId) {
  * @param {number} limit - El número máximo de productos más vendidos que se desea obtener en el resumen, este parámetro permite limitar la cantidad de productos que se incluyen en el resumen para enfocarse en los productos más populares.
  * @return {Promise<Array>} Un array de objetos que representan los productos más vendidos, cada objeto incluye el ID del producto, el nombre del producto y la cantidad total vendida, o un error si no se encuentra ningún detalle de pedido para calcular el resumen de productos más vendidos.
  */
-detallePedido.obtenerProductosMasVendidos = async function (limit = 10) {
-  const {sequelize } = require("../config/database");
-  return await this.findAll({;
-};
+((detallePedido.obtenerProductosMasVendidos = async function (limit = 10) {
+  const { sequelize } = require("../config/database");
+  return await this.findAll({
+    attributes: [
+      "productoId",
+      [sequelize.fn("SUM", sequelize.col("cantidad")), "totalVendido"],
+    ],
+    group: ["productoId"],
+    order: [[sequelize.fn("SUM", sequelize.col("cantidad")), "DESC"]],
+    limit: limite ,
+  });
+})),
 
-/**
- * Metodo para calcular el total del carrito de un usuario, este método busca todos los items de carrito asociados al ID del usuario proporcionado, calcula el subtotal de cada item (precio unitario * cantidad) y luego suma todos los subtotales para obtener el total del carrito, esto permite obtener el monto total que el usuario tendría que pagar por los productos agregados a su carrito de compras.
- * @param {number} usuarioId - El ID del usuario para el cual se desea calcular el total del carrito
- * @returns {Promise<number>} El total del carrito calculado a partir de los items de carrito asociados al usuario, o un error si no se encuentra ningún item de carrito para el usuario proporcionado.
- */
-carrito.calcularTotalCarrito = async function (usuarioId) {
-  const items = await carrito.findAll({ where: { usuarioId } });
 
-  let total = 0;
-  for (const item of items) {
-    total += item.calcularSubtotal(); //Suma el subtotal de cada item al total
-  }
-  return total;
-};
-
-/**
- * Metodo par vaciar el carrito de un usuario, este método elimina todos los items de carrito asociados al ID del usuario proporcionado, esto permite vaciar completamente el carrito de compras de un usuario, eliminando todos los productos que había agregado previamente.
- * @param {number} usuarioId - El ID del usuario para el cual se desea vaciar el carrito
- * @returns {Promise} Un mensaje de éxito si el carrito fue vaciado correctamente, o un error si no se encuentra ningún item de carrito para el usuario proporcionado.
- */
-carrito.vaciarCarrito = async function (usuarioId) {
-  return await carrito.destroy({ where: { usuarioId } });
-};
-
-//Exportar el modelo de carrito para ser utilizado en otras partes de la aplicación
-module.exports = carrito;
+//Exportar el modelo de detallePedido para ser utilizado en otras partes de la aplicación
+module.exports = detallePedido;
