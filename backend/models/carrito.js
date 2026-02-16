@@ -222,4 +222,31 @@ carrito.obtenerCarritoUsuario = async function (usuarioId) {
     ],
     order: [['createdAt', 'DESC']] //Ordenar por fecha de creación, el item más reciente primero
   });
-}
+};
+
+/**
+ * Metodo para calcular el total del carrito de un usuario, este método busca todos los items de carrito asociados al ID del usuario proporcionado, calcula el subtotal de cada item (precio unitario * cantidad) y luego suma todos los subtotales para obtener el total del carrito, esto permite obtener el monto total que el usuario tendría que pagar por los productos agregados a su carrito de compras.
+ * @param {number} usuarioId - El ID del usuario para el cual se desea calcular el total del carrito
+ * @returns {Promise<number>} El total del carrito calculado a partir de los items de carrito asociados al usuario, o un error si no se encuentra ningún item de carrito para el usuario proporcionado.
+ */
+carrito.calcularTotalCarrito = async function (usuarioId) {
+  const items = await carrito.findAll({ where: { usuarioId } });
+
+  let total = 0;
+  for (const item of items) {
+    total += item.calcularSubtotal(); //Suma el subtotal de cada item al total
+  }
+  return total;
+};
+
+/**
+ * Metodo par vaciar el carrito de un usuario, este método elimina todos los items de carrito asociados al ID del usuario proporcionado, esto permite vaciar completamente el carrito de compras de un usuario, eliminando todos los productos que había agregado previamente.
+ * @param {number} usuarioId - El ID del usuario para el cual se desea vaciar el carrito
+ * @returns {Promise} Un mensaje de éxito si el carrito fue vaciado correctamente, o un error si no se encuentra ningún item de carrito para el usuario proporcionado.
+ */
+carrito.vaciarCarrito = async function (usuarioId) {
+  return await carrito.destroy({ where: { usuarioId } });
+};
+
+//Exportar el modelo de carrito para ser utilizado en otras partes de la aplicación
+module.exports = carrito;
