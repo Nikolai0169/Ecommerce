@@ -268,50 +268,73 @@ pedido.prototype.cancelar = async function () {
   //Importar modelos necesarios para cancelar el pedido
   const DetallePedido = require("./detallePedido");
   const Producto = require("./producto");
+
+  //Obtener los detalles del pedido para devolver el stock de los productos asociados a este pedido
+  const detalles = await DetallePedido.findAll({
+    where: { pedidoId: this.id },
+  });
+
+  //Devolver el stock de los productos asociados a este pedido
+  for (const detalle of detalles) {
+    const producto = await Producto.findByPk(detalle.productoId);
+    if (producto) {
+      await producto.aumentarStock(detalle.cantidad); //Guardar el producto sin ejecutar los hooks para evitar un bucle infinito
+      console.log(` Stock devuelto ${detalle.cantidad} X ${producto.nombre} `); //Mensaje de log para indicar que se ha aumentado el stock del producto debido a la cancelación del pedido
+    }
+  }
+
+  //cambiar el estado del pedido a "cancelado"
+  this.estado = "cancelado";
+  return await this.save(); //Guardar el pedido con el nuevo estado "cancelado"
 };
 
 /**
- * Metodo para obtener el carrito completo de un usuario, este método busca todos los items de carrito asociados al ID del usuario proporcionado, incluyendo la información del producto asociado a cada item de carrito, esto permite obtener una vista completa del carrito de compras de un usuario, incluyendo los detalles de cada producto agregado al carrito.
- * @param {number} usuarioId - El ID del usuario para el cual se desea obtener el carrito completo
- * @returns {Promise} Un array de items de carrito con la información del producto asociado a cada item, o un error si no se encuentra ningún item de carrito para el usuario proporcionado.
+ * Metodo para obtener los detalles del pedido, este método busca todos los detalles de pedido asociados al ID del pedido proporcionado, incluyendo la información del producto asociado a cada detalle de pedido, esto permite obtener una vista completa de los detalles de un pedido, incluyendo los productos que se han comprado, las cantidades y los precios unitarios.
+ * @returns {Promise<Array>} Un array de detalles de pedido con la información del producto asociado a cada detalle, o un error si no se encuentra ningún detalle de pedido para el ID del pedido proporcionado.
  */
-carrito.obtenerCarritoUsuario = async function (usuarioId) {
-  const producto = require("./producto");
-  return await carrito.findAll({
-    where: { usuarioId },
+pedido.prototype.obtenerDetalles = async function () {
+  const DetallePedido = require("./detallePedido");
+  const Producto = require("./producto");
+  return await DetallePedido.findAll({
+    where: { pedidoId: this.id },
     include: [
       {
-        model: producto,
+        model: Producto,
         as: "producto",
       },
     ],
-    order: [["createdAt", "DESC"]], //Ordenar por fecha de creación, el item más reciente primero
   });
 };
 
 /**
- * Metodo para calcular el total del carrito de un usuario, este método busca todos los items de carrito asociados al ID del usuario proporcionado, calcula el subtotal de cada item (precio unitario * cantidad) y luego suma todos los subtotales para obtener el total del carrito, esto permite obtener el monto total que el usuario tendría que pagar por los productos agregados a su carrito de compras.
- * @param {number} usuarioId - El ID del usuario para el cual se desea calcular el total del carrito
- * @returns {Promise<number>} El total del carrito calculado a partir de los items de carrito asociados al usuario, o un error si no se encuentra ningún item de carrito para el usuario proporcionado.
+ * Metodo para obtener pedidos por estado, este método busca todos los pedidos que tienen el estado especificado, esto permite obtener una lista de pedidos filtrada por su estado actual, lo que puede ser útil para los administradores de la aplicación para gestionar los pedidos y realizar un seguimiento de los pedidos en diferentes estados.
+ * @param {string} estado - El estado por el cual se desea filtrar los pedidos, debe ser uno de los estados permitidos ("pendiente", "pagado", "enviado", "entregado" o "cancelado")
+ * @returns {Promise<Array>} Un array de pedidos que tienen el estado especificado, o un error si el estado proporcionado no es válido.
  */
-carrito.calcularTotalCarrito = async function (usuarioId) {
-  const items = await carrito.findAll({ where: { usuarioId } });
-
-  let total = 0;
-  for (const item of items) {
-    total += item.calcularSubtotal(); //Suma el subtotal de cada item al total
-  }
-  return total;
+carrito.obtenerPorEstado = async function (estado) {
+  const usuario = require("./usuario");
+  return await this.findAll({
+    where: { estado },
+    incluide: [
+      {
+        model: usuario,
+        as: "usuario",
+      },
+    ],
+    order: [["createdAt", "DESC"]], //Ordenar los pedidos por fecha de creación de forma descendente (del más reciente al más antiguo)});
+  });
 };
-
 /**
- * Metodo par vaciar el carrito de un usuario, este método elimina todos los items de carrito asociados al ID del usuario proporcionado, esto permite vaciar completamente el carrito de compras de un usuario, eliminando todos los productos que había agregado previamente.
- * @param {number} usuarioId - El ID del usuario para el cual se desea vaciar el carrito
- * @returns {Promise} Un mensaje de éxito si el carrito fue vaciado correctamente, o un error si no se encuentra ningún item de carrito para el usuario proporcionado.
+ * Metodo para pbtener el historial de pedidos de un usuario, este método busca todos los pedidos asociados al ID del usuario proporcionado, ordenados por fecha de creación de forma descendente, esto permite obtener una lista completa de los pedidos realizados por un usuario específico, lo que puede ser útil para los usuarios para revisar su historial de compras y para los administradores de la aplicación para gestionar los pedidos y realizar un seguimiento de las compras realizadas por cada usuario.
+ * @param {number} usuarioId - El ID del usuario para el cual se desea obtener el historial de pedidos
+ * @returns {Promise<Array>} Un array de pedidos asociados al ID del usuario proporcionado, ordenados por fecha de creación de forma descendente, o un error si no se encuentra ningún pedido para el usuario proporcionado.
  */
-carrito.vaciarCarrito = async function (usuarioId) {
-  return await carrito.destroy({ where: { usuarioId } });
+pedido.obtenerHistorialPorUsuario = async function (usuarioId) {
+  const usuario = require("./usuario");
+  return await this.findAll({
+    where: { usuarioId },
+    orders: [["createdAt", "DESC"]], //Ordenar los pedidos por fecha de creación de forma descendente (del más reciente al más antiguo)
+  });
 };
-
-//Exportar el modelo de carrito para ser utilizado en otras partes de la aplicación
-module.exports = carrito;
+//Exportar el modelo de pedido para ser utilizado en otras partes de la aplicación
+module.exports = pedido;
