@@ -114,87 +114,49 @@ const pedido = sequelize.define(
       allowNull: true, //Permite valores nulos
     },
 
-    /**
-     * ProductoID Id del producto en el pedido
-     * Este campo se usa para mantener un registro del producto asociado al pedido, esto permite tener un historial completo de los productos pedidos por cada usuario y facilita la generación de reportes y estadísticas sobre las ventas realizadas en la aplicación.
-     */
-    productoId: {
-      type: DataTypes.INTEGER, //Tipo de dato entero
-      allowNull: false, //No permite valores nulos
-      references: {
-        model: "Productos", //Referencia a la tabla de productos
-        key: "id", //Clave foránea en la tabla de productos
-      },
-      onUpdate: "CASCADE", //Si se actualiza el ID del producto, se actualiza el ID del pedido
-      onDelete: "CASCADE", //Se elimina el producto del pedido
-      validate: {
-        notEmpty: {
-          msg: "Debe especificar un producto del carrito", //Mensaje de error personalizado si se intenta crear un carrito sin ID de producto
-        },
-      },
+    //Fecha de pago del pedido, se guarda para mantener un registro de la fecha en que se realizó el pago del pedido, esto permite tener un historial completo de los pedidos realizados por cada usuario y facilita la generación de reportes y estadísticas sobre las ventas realizadas en la aplicación, además de ayudar a los administradores a gestionar los pedidos y realizar un seguimiento de los pagos recibidos.
+    fechaPago: {
+      type: DataTypes.DATE, //Tipo de dato fecha
+      allowNull: true, //Permite valores nulos, ya que un pedido puede ser creado antes de ser pagado
     },
 
-    // Cantidad de este producto en el carrito
-    cantidad: {
-      type: DataTypes.INTEGER, //Tipo de dato entero
-      allowNull: false, //No permite valores nulos
-      defaultValue: 1, //Valor por defecto de la cantidad
-      validate: {
-        isInt: {
-          msg: "La cantidad debe ser un número entero", //Mensaje de error personalizado si se intenta crear un carrito sin cantidad
-        },
-        min: {
-          args: [1], //Valor mínimo de la cantidad
-          msg: "La cantidad debe ser al menos 1", //Mensaje de error personalizado si se intenta crear un carrito con una cantidad menor a 1
-        },
-      },
+    //Fecha de envio del pedido, se guarda para mantener un registro de la fecha en que se realizó el envío del pedido, esto permite tener un historial completo de los pedidos realizados por cada usuario y facilita la generación de reportes y estadísticas sobre las ventas realizadas en la aplicación, además de ayudar a los administradores a gestionar los pedidos y realizar un seguimiento de los envíos realizados.
+    fechaEnvio: {
+      type: DataTypes.DATE, //Tipo de dato fecha
+      allowNull: true, //Permite valores nulos, ya que un pedido puede ser creado antes de ser enviado
     },
 
-    /**
-     * Precio unitario del producto al momento de agregarlo al carrito
-     * se guarda para mantener el precio aunque el producto cambie de precio en el futuro
-     */
-    precioUnitario: {
-      type: DataTypes.DECIMAL(10, 2), //Tipo de dato decimal con 10 dígitos en total y 2 decimales
-      allowNull: false, //No permite valores nulos
-      validate: {
-        isDecimal: {
-          msg: "El precio unitario debe ser un número decimal", //Mensaje de error personalizado si se intenta crear un carrito sin precio unitario
-        },
-        min: {
-          args: [0], //Valor mínimo del precio unitario
-          msg: "El precio unitario debe ser mayor o igual a 0", //Mensaje de error personalizado si se intenta crear un carrito con un precio unitario negativo
-        },
-      },
+    //Fecha de entrega del pedido, se guarda para mantener un registro de la fecha en que se realizó la entrega del pedido, esto permite tener un historial completo de los pedidos realizados por cada usuario y facilita la generación de reportes y estadísticas sobre las ventas realizadas en la aplicación, además de ayudar a los administradores a gestionar los pedidos y realizar un seguimiento de los pedidos entregados.
+    fechaEntrega: {
+      type: DataTypes.DATE, //Tipo de dato fecha
+      allowNull: true, //Permite valores nulos, ya que un pedido puede ser creado antes de ser entregado
     },
   },
   {
     // Opciones de modelo
-    tableName: "carritos",
+    tableName: "pedidos", //Nombre de la tabla en la base de datos
     timestamps: true,
     //indices para mejorar las busquedas
     indexes: [
       {
-        fields: ["usuarioId"], //Índice para buscar carrito por usuario
+        fields: ["usuarioId"], //Índice para buscar pedidos por usuario
       },
 
       {
-        //Indice compuesto: Un usuario no puede tener el mismo producto duplicado
-        unique: true,
-        fields: ["usuarioId", "productoId"],
-        name: "usuario_producto_unique",
+        fields: ["estado"], //Índice para buscar pedidos por estado
+      },
+
+      {
+        fields: ["createdAt"], //Índice para buscar pedidos por fecha
       },
     ],
-    /**
-     * Hooks acciones automaticas que se ejecutan en ciertos momentos del ciclo de vida de un modelo, en este caso se define un hook "beforeUpdate" que se ejecuta antes de actualizar un registro de categoría, este hook verifica si el campo "activo" ha cambiado a false (desactivado) y si es así, desactiva todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos.
-     */
 
     hooks: {
       /**
        * beforeCreate se ejecuta antes de crear un nuevo registro de categoría, este hook verifica si el campo "activo" está establecido en false (desactivado) y si es así, lanza un error para evitar que se creen categorías desactivadas, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
        * verifica que la categoria no se cree con el campo "activo" establecido en false, lo que podría causar problemas de integridad de datos si se crean subcategorías o productos asociados a una categoría que ya está desactivada.
        */
-      beforeCreate: async (itemcarrito) => {
+      /**beforeCreate: async (itemcarrito) => {
         const producto = require("./producto");
         //Buscar el producto asociado a este item de carrito para verificar su estado
         const prducto = await producto.findByPk(itemcarrito.productoId);
@@ -220,29 +182,46 @@ const pedido = sequelize.define(
         //Guardar el precio unitario del producto al momento de agregarlo al carrito para mantener el precio aunque el producto cambie de precio en el futuro
         itemcarrito.precioUnitario = prducto.precio;
       },
+
       /**
-       * beforeUpdate se ejecuta antes de actualizar un carrito, este hook verifica si el campo "activo" ha cambiado a false (desactivado) y si es así, desactiva todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos, esto ayuda a evitar problemas con productos que pertenecen a subcategorías desactivadas.
-       * verifica si el campo "activo" ha cambiado a false (desactivado) y si es así, desactiva todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos, esto ayuda a evitar problemas con productos que pertenecen a subcategorías desactivadas.
-       * Si se activa una categoría (activo cambia a true), no se activan automáticamente las subcategorías o productos asociados, esto se deja a discreción del administrador para evitar activar subcategorías o productos que podrían no estar listos para ser activados.
+       * afterUpdate se ejecuta después de actualizar un registro de categoría, este hook verifica si el campo "activo" ha cambiado y si es así, lanza un error para evitar que se actualicen categorías a un estado inconsistente, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
+       * verifica que la categoria no se actualice para establecer el campo "activo" en false, lo que podría causar problemas de integridad de datos si se desactivan subcategorías o productos asociados a una categoría que ya está desactivada.
+        * Si se desactiva una categoría (activo cambia a false), no se desactivan automáticamente las subcategorías o productos asociados, esto se deja a discreción del administrador para evitar desactivar subcategorías o productos que podrían estar activos y listos para ser vendidos.       
        */
-      BeforeUpdate: async (itemcarrito) => {
-        //Verificar si el campo "cantidad" ha cambiado a false (desactivado)
+      AfterUpdate: async (pedido) => {
+        //Si el estado del pedido cambia a "pagado", verificar que el producto asociado a cada item de carrito tenga suficiente stock disponible para satisfacer la cantidad solicitada, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que podrían no tener suficiente stock para satisfacer la cantidad solicitada en un pedido.
 
-        if (itemcarrito.changed("cantidad")) {
-          const producto = require("./producto");
-          const prducto = await producto.findByPk(itemcarrito.productoId);
-          if (!prducto) {
-            throw new Error(
-              "El producto asociado a este item de carrito no existe", //Mensaje de error personalizado si se intenta actualizar un item de carrito con un producto que no existe
-            );
-          }
-
-          if (!producto.hayStock(itemcarrito.cantidad)) {
-            throw new Error(
-              `Stock insuficiente, solo hay ${prducto.stock} unidades disponibles`, //Mensaje de error personalizado si se intenta actualizar un item de carrito con una cantidad que excede el stock disponible del producto
-            );
-          }
+        if (pedido.changed("estado") && pedido.estado === "pagado") {
+          pedido.fechaPago = new Date(); //Establecer la fecha de pago al momento de cambiar el estado a "pagado"
+          await producto.save({ hooks: false }); //Guardar el producto sin ejecutar los hooks para evitar un bucle infinito
         }
+
+        //si el estado del pedido cambia a "enviado", establecer la fecha de envío al momento de cambiar el estado a "enviado"
+        if (
+          pedido.changed("estado") &&
+          pedido.estado === "enviado" &&
+          !pedido.fechaEnvio
+        ) {
+          pedido.fechaEnvio = new Date(); //Establecer la fecha de envío al momento de cambiar el estado a "enviado"
+          await producto.save({ hooks: false }); //Guardar el producto sin ejecutar los hooks para evitar un bucle infinito
+        }
+
+        //si el estado del pedido cambia a "entregado", establecer la fecha de entrega al momento de cambiar el estado a "entregado"
+        if (
+          pedido.changed("estado") &&
+          pedido.estado === "entregado" &&
+          !pedido.fechaEntrega
+        ) {
+          pedido.fechaEntrega = new Date(); //Establecer la fecha de entrega al momento de cambiar el estado a "entregado"
+          await producto.save({ hooks: false }); //Guardar el producto sin ejecutar los hooks para evitar un bucle infinito
+        }
+      },
+
+      //beforeDestroy se ejecuta antes de eliminar un registro de categoría, este hook verifica si hay subcategorías o productos asociados a esta categoría antes de permitir su eliminación, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
+      beforeDestroy: async (pedido) => {
+        throw new Error(
+          "No se puede eliminar un pedido, solo se puede cancelar cambiando su estado a 'cancelado'", //Mensaje de error personalizado si se intenta eliminar un pedido, ya que los pedidos no deben ser eliminados para mantener un historial completo de los pedidos realizados por cada usuario y facilitar la generación de reportes y estadísticas sobre las ventas realizadas en la aplicación.
+        );
       },
     },
   },
@@ -250,30 +229,45 @@ const pedido = sequelize.define(
 
 //METODOS DE INSTANCIA
 /**
- * Método de instancia para obtener el número de subcategorías activas asociadas a esta categoría
- * @returns {number} - Subtotal de productos asociados a esta subcategoría (precio unitario * cantidad)
+ * Método de instancia para cambiar el estado del pedido, este método permite cambiar el estado del pedido a uno de los estados permitidos ("pendiente", "pagado", "enviado", "entregado" o "cancelado"), esto ayuda a mantener la integridad de los datos y evitar problemas con pedidos que podrían tener un estado inconsistente.
+ * @param {string} nuevoEstado - El nuevo estado que se desea establecer para este pedido, debe ser uno de los estados permitidos ("pendiente", "pagado", "enviado", "entregado" o "cancelado")
+ * @returns {Promise} Pedido actualizado con el nuevo estado si la actualización fue exitosa, o un error si el nuevo estado no es válido.
  */
-carrito.prototype.calcularSubtotal = function () {
-  return parseFloa(this.precioUnitario) * this.cantidad;
+pedido.prototype.cambiarEstado = async function (nuevoEstado) {
+  const estadosValidos = [
+    "pendiente",
+    "pagado",
+    "enviado",
+    "entregado",
+    "cancelado",
+  ];
+  if (!estadosValidos.includes(nuevoEstado)) {
+    throw new Error("Estado no válido");
+  }
+  this.estado = nuevoEstado;
+  return await this.save();
 };
 
 /**
- * Metodo para actualizar la cantidad de un item de carrito, este método verifica si el nuevo valor de cantidad es válido (un número entero mayor o igual a 1) y si hay suficiente stock disponible del producto asociado antes de actualizar la cantidad en el carrito, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que podrían no tener suficiente stock para satisfacer la cantidad solicitada.
- * @param {number} nuevaCantidad - La nueva cantidad que se desea establecer para este item de carrito
- * @returns {Promise} Item actualizado con la nueva cantidad si la actualización fue exitosa, o un error si la nueva cantidad no es válida o si no hay suficiente stock disponible del producto asociado.
+ * Metodo para verificar si el pedido piede ser cancelado, este método verifica si el estado actual del pedido es "pendiente" o "pagado", lo que indica que el pedido aún no ha sido enviado y por lo tanto puede ser cancelado, esto ayuda a mantener la integridad de los datos y evitar problemas con pedidos que podrían tener un estado inconsistente.
+ * @returns {boolean} true si el pedido puede ser cancelado (estado es "pendiente" o "pagado"), o false si el pedido no puede ser cancelado (estado es "enviado", "entregado" o "cancelado").
  */
-carrito.prototype.actualizarCantidad = async function (nuevaCantidad) {
-  const producto = require("./producto");
+pedido.prototype.puedeSerCancelado = function () {
+  return ["pendiente", "pagado"].includes(this.estado); //El pedido puede ser cancelado si su estado es "pendiente" o "pagado"
+};
 
-  const prducto = await producto.findByPk(this.productoId);
-
-  if (!prducto.hayStock(nuevaCantidad)) {
-    throw new Error(
-      `Stock insuficiente, solo hay ${prducto.stock} unidades disponibles`,
-    );
+/**
+ * Metodo para cancelar el pedido, este método cambia el estado del pedido a "cancelado" si el pedido puede ser cancelado (estado es "pendiente" o "pagado"), esto ayuda a mantener la integridad de los datos y evitar problemas con pedidos que podrían tener un estado inconsistente.
+ * @returns {Promise<Pedido>} Pedido actualizado con el estado "cancelado" si la cancelación fue exitosa, o un error si el pedido no puede ser cancelado.
+ */
+pedido.prototype.cancelar = async function () {
+  if (!this.puedeSerCancelado()) {
+    throw new Error("No se puede cancelar el pedido");
   }
-  this.cantidad = nuevaCantidad;
-  return await this.save();
+
+  //Importar modelos necesarios para cancelar el pedido
+  const DetallePedido = require("./detallePedido");
+  const Producto = require("./producto");
 };
 
 /**
