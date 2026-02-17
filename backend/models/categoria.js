@@ -16,8 +16,8 @@ const sequelize = require("../config/database");
  * En este caso, se define un modelo llamado "Categoria" con los campos id (clave primaria, auto-incremental), nombre (cadena de texto, no nulo) y descripcion (cadena de texto).
  */
 
-const Categoria = sequelize.define(
-  "Categoria",
+const categoria = sequelize.define(
+  "categoria",
   {
     //campos de la tabla categorias
     //Id Identificador único de la categoría, es la clave primaria y se auto-incrementa
@@ -75,7 +75,7 @@ const Categoria = sequelize.define(
        * AfterUpdate: Hook que se ejecuta después de actualizar un registro de categoría
        * si se desactiva una categoría (activo cambia a false), se desactivan todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
        */
-      afterUpdate: async (categoria, options) => {
+      afterUpdate: async (categoria) => {
         //Verificar si el campo "activo" ha cambiado a false (desactivado)
         if (categoria.changed("activo") && !categoria.activo) {
           try {
