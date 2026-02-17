@@ -165,7 +165,6 @@ const usuario = sequelize.define(
         }
       },
 
-
       /**
        * beforeUpdate: Hook que se ejecuta antes de actualizar un registro de usuario
        * si se desactiva un usuario (activo cambia a false), se desactivan todas las subcategorías asociadas a ese usuario para mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
@@ -184,11 +183,14 @@ const usuario = sequelize.define(
 
 //METODOS DE INSTANCIA
 /**
- * Método de instancia para obtener el número de subcategorías activas asociadas a esta categoría
- * Este método se puede utilizar para mostrar información adicional sobre la categoría en la interfaz de usuario, como el número de subcategorías activas que tiene cada categoría.
- * El método utiliza la función count de Sequelize para contar el número de subcategorías que tienen el campo "activo" establecido en true y que están asociadas a esta categoría a través del campo "categoriaId".
- * @returns {Promise<number>} El número de subcategorías activas asociadas a esta categoría
+ * Metodo para comparar una contraseña proporcionada por el usuario con el hash almacenado en la base de datos, se utiliza para verificar la contraseña durante el inicio de sesión, devuelve true si la contraseña es correcta y false si es incorrecta.
+ * El método utiliza bcrypt.compare() para comparar la contraseña proporcionada por el usuario con el hash almacenado en la base de datos, lo que garantiza que las contraseñas de los usuarios estén protegidas incluso durante el proceso de autenticación.
+ * @param {string} contraseñaIngresada - La contraseña proporcionada por el usuario para verificar
+ * @return {promise<boolean>} - Devuelve true si la contraseña es correcta y false si es incorrecta
  */
+Usuario.prototype.compararContraseña = async function (contraseñaIngresada) {
+  return await bcrypt.compare(contraseñaIngresada, this.contraseña);
+};
 Categoria.prototype.getNumerosubcategoriasActivas = async function () {
   const subcategoria = require("./subcategoria");
   return await subcategoria.count({
@@ -198,5 +200,16 @@ Categoria.prototype.getNumerosubcategoriasActivas = async function () {
   });
 };
 
-//Exportar el modelo de categoría para que pueda ser utilizado en otras partes de la aplicación
-module.exports = Categoria;
+/**
+ * metodo para obtener datos publicos del usuario, devuelve un objeto con los campos id, nombre, email, rol, telefono y direccion del usuario, este método es útil para exponer solo la información necesaria del usuario en la interfaz de usuario o en la API, evitando exponer información sensible como la contraseña.
+ * @return {object} - Devuelve un objeto con los campos id, nombre, email, rol, telefono y direccion del usuario
+ */
+
+Usuario.prototype.toJSON = function () {
+  const valores = Object.assign({}, this.get()); //Obtener todos los campos del usuario como un objeto
+  delete valores.contraseña; //Eliminar el campo contraseña del objeto para no exponer información sensible
+  return valores; //Devolver el objeto con los datos públicos del usuario
+};
+
+//Exportar el modelo de usuario para que pueda ser utilizado en otras partes de la aplicación
+module.exports = Usuario;
