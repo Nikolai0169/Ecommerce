@@ -118,7 +118,7 @@ const detallePedido = sequelize.define(
   },
   {
     // Opciones de modelo
-    tableName: "detallesPedidos", //Nombre de la tabla en la base de datos
+    tableName: "detallePedido", //Nombre de la tabla en la base de datos
     timestamps: false, //No se crean automáticamente los campos createdAt y updatedAt
     //indices para mejorar las busquedas
     indexes: [

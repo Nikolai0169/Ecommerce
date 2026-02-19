@@ -53,7 +53,7 @@ subcategoria.belongsTo(categoria, {
 
 categoria.hasMany(producto, {
   foreignKey: "categoriaId", // campo que conecta las tablas
-  as: "productos", // alias para la relacion
+  as: "producto", // alias para la relacion
   onDelete: "CASCADE", //si se elimina la categoria eliminar el producto
   onUpdate: "CASCADE",
 });
@@ -77,7 +77,7 @@ producto.belongsTo(categoria, {
 
 subcategoria.hasMany(producto, {
   foreignKey: "subcategoriaId", // campo que conecta las tablas
-  as: "productos", // alias para la relacion
+  as: "producto", // alias para la relacion
   onDelete: "CASCADE", //si se elimina la subcategoria eliminar el producto
   onUpdate: "CASCADE", // si se actualiza la subcategoria se actualiza el producto
 });
@@ -99,4 +99,113 @@ usuario.hasMany(carrito, {
   as: "carrito", // alias para la relacion
   onDelete: "CASCADE", //si se elimina el usuario eliminar el carrito
   onUpdate: "CASCADE", // si se actualiza el usuario se actualiza el carrito
+});
+
+carrito.belongsTo(usuario, {
+  foreignKey: "usuarioId", // campo que conecta las tablas
+  as: "usuario", // alias para la relacion
+  onDelete: "CASCADE", //si se elimina el usuario eliminar el carrito
+  onUpdate: "CASCADE", // si se actualiza el usuario se actualiza el carrito
+});
+
+/**
+ * producto - carrito
+ * un producto tiene muchos carritos
+ * un carrito pertenece a un producto
+ */
+
+producto.hasMany(carrito, {
+  foreignKey: "productoId", // campo que conecta las tablas
+  as: "carrito", // alias para la relacion
+  onDelete: "CASCADE", //si se elimina el producto eliminar el carrito
+  onUpdate: "CASCADE", // si se actualiza el producto se actualiza el carrito
+});
+
+carrito.belongsTo(producto, {
+  foreignKey: "productoId", // campo que conecta las tablas
+  as: "producto", // alias para la relacion
+  onDelete: "CASCADE", //si se elimina el producto eliminar el carrito
+  onUpdate: "CASCADE", // si se actualiza el producto se actualiza el carrito
+});
+
+/**
+ * usuario - pedido
+ * un usuario tiene muchos pedidos
+ * un pedido pertenece a un usuario
+ */
+
+usuario.hasMany(pedido, {
+  foreignKey: "usuarioId", // campo que conecta las tablas
+  as: "pedido", // alias para la relacion
+  onDelete: "RESTRICT", //si se elimina el usuario no se elimina el pedido
+  onUpdate: "CASCADE", // si se actualiza el usuario se actualiza el pedido
+});
+
+pedido.belongsTo(usuario, {
+  foreignKey: "usuarioId", // campo que conecta las tablas
+  as: "usuario", // alias para la relacion
+  onDelete: "RESTRICT", //si se elimina el usuario no se elimina el pedido
+  onUpdate: "CASCADE", // si se actualiza el usuario se actualiza el pedido
+});
+
+/**
+ * pedido - detallePedido
+ * un pedido tiene muchos detalles de pedido
+ * un detalle de pedido pertenece a un pedido
+ */
+
+pedido.hasMany(detallePedido, {
+  foreignKey: "pedidoId", // campo que conecta las tablas
+  as: "detallePedido", // alias para la relacion
+  onDelete: "CASCADE", //si se elimina el pedido eliminar el detalle de pedido
+  onUpdate: "CASCADE", // si se actualiza el pedido se actualiza el detalle de pedido
+});
+
+detallePedido.belongsTo(pedido, {
+  foreignKey: "pedidoId", // campo que conecta las tablas
+  as: "pedido", // alias para la relacion
+  onDelete: "CASCADE", //si se elimina el pedido eliminar el detalle de pedido
+  onUpdate: "CASCADE", // si se actualiza el pedido se actualiza el detalle de pedido
+});
+
+/**
+ * producto - detallePedido
+ * un producto tiene muchos detalles de pedido
+ * un detalle de pedido pertenece a un producto
+ */
+
+producto.hasMany(detallePedido, {
+  foreignKey: "productoId", // campo que conecta las tablas
+  as: "detallePedido", // alias para la relacion
+  onDelete: "RESTRICT", //si se elimina el producto no se elimina el detalle de pedido
+  onUpdate: "CASCADE", // si se actualiza el producto se actualiza el detalle de pedido
+});
+
+detallePedido.belongsTo(producto, {
+  foreignKey: "productoId", // campo que conecta las tablas
+  as: "producto", // alias para la relacion
+  onDelete: "RESTRICT", //si se elimina el producto no se elimina el detalle de pedido
+  onUpdate: "CASCADE", // si se actualiza el producto se actualiza el detalle de pedido
+});
+
+/**
+ * relaccion muchos a muchos entre pedido y producto
+ * con una tabla intermedia que almacena la cantidad de cada producto en el pedido y el precio unitario al momento de realizar el pedido
+ * esto permite mantener un historial preciso de los pedidos realizados por los usuarios, incluso si los productos cambian de precio o estado en el futuro
+ */
+
+pedido.belongsToMany(producto, {
+  through: detallePedido, // tabla intermedia
+  foreignKey: "pedidoId", // campo que conecta las tablas
+  as: "productos", // alias para la relacion
+  onDelete: "CASCADE", //si se elimina el pedido eliminar el detalle de pedido
+  onUpdate: "CASCADE", // si se actualiza el pedido se actualiza el detalle de pedido
+});
+
+producto.belongsToMany(pedido, {
+  through: detallePedido, // tabla intermedia
+  foreignKey: "productoId", // campo que conecta las tablas
+  as: "pedidos", // alias para la relacion
+  onDelete: "CASCADE", //si se elimina el producto eliminar el detalle de pedido
+  onUpdate: "CASCADE", // si se actualiza el producto se actualiza el detalle de pedido
 });
