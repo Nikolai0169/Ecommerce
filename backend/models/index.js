@@ -197,15 +197,36 @@ detallePedido.belongsTo(producto, {
 pedido.belongsToMany(producto, {
   through: detallePedido, // tabla intermedia
   foreignKey: "pedidoId", // campo que conecta las tablas
+  otherKey: "productoId", // campo que conecta las tablas
   as: "productos", // alias para la relacion
-  onDelete: "CASCADE", //si se elimina el pedido eliminar el detalle de pedido
-  onUpdate: "CASCADE", // si se actualiza el pedido se actualiza el detalle de pedido
 });
 
 producto.belongsToMany(pedido, {
   through: detallePedido, // tabla intermedia
   foreignKey: "productoId", // campo que conecta las tablas
+  otherKey: "pedidoId", // campo que conecta las tablas
   as: "pedidos", // alias para la relacion
-  onDelete: "CASCADE", //si se elimina el producto eliminar el detalle de pedido
-  onUpdate: "CASCADE", // si se actualiza el producto se actualiza el detalle de pedido
 });
+
+/**
+ * Exportar funcion de inicializacion
+ * funcion para inicializar todaas las asociaciones
+ * debe ejecutarse despues de importar todos los modelos
+ * se llama desde server.js despues de cargar todos los modelos
+ */
+
+const initAssociations = () => {
+  console.log("Asociaciones entre los modelos establecidas correctamente.");
+};
+
+// Exportar los modelos
+module.exports = {
+  usuario,
+  categoria,
+  carrito,
+  subcategoria,
+  producto,
+  pedido,
+  detallePedido,
+  initAssociations,
+};

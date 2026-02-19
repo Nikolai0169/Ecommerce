@@ -131,7 +131,7 @@ const producto = sequelize.define(
 
   {
     //Opciones del modelo
-    tableName: "productos", //Nombre de la tabla en la base de datos, se especifica para evitar que Sequelize pluralice el nombre del modelo (por defecto, Sequelize pluraliza los nombres de los modelos para crear las tablas, por ejemplo, el modelo "subcategoria" se pluralizaría a "subcategorias")
+    tableName: "producto", //Nombre de la tabla en la base de datos, se especifica para evitar que Sequelize pluralice el nombre del modelo (por defecto, Sequelize pluraliza los nombres de los modelos para crear las tablas, por ejemplo, el modelo "subcategoria" se pluralizaría a "subcategorias")
     timestamps: true, //Agrega automáticamente campos createdAt y updatedAt para registrar la fecha de creación y actualización de cada registro
 
     /**
