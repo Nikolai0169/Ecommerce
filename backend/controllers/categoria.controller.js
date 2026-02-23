@@ -11,7 +11,6 @@ const categoria = require("../models/categoria");
 const subcategoria = require("../models/subcategoria");
 const producto = require("../models/producto");
 
-
 /**
  * obtener todas las categorias
  * query params:
@@ -263,7 +262,7 @@ const actualizarCategoria = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Error al actualizar la categoria",
-        errors: error.errors.map(e => e.message),
+        errors: error.errors.map((e) => e.message),
       });
     }
     res.status(500).json({
@@ -286,7 +285,7 @@ const actualizarCategoria = async (req, res) => {
 const toggleCategoria = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     //buscar categoria
     const categoria = await categoria.findByPk(id);
     if (!categoria) {
@@ -321,10 +320,19 @@ const toggleCategoria = async (req, res) => {
       success: true,
       message: `Categoria ${nuevoEstado ? "activada" : "desactivada"} correctamente`,
       data: {
-        subcategoria:
-        subcategoriasAfectadas,
-        producto: productosAfectados
+        categoria,
+        afectados: {
+          subcategoria: subcategoriasAfectadas,
+          producto: productosAfectados,
+        },
       },
     });
-}
-}
+  } catch (error) {
+    console.error("Error en toggleCategoria", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al activar o desactivar la categoria",
+      error: error.message,
+    });
+  }
+};
