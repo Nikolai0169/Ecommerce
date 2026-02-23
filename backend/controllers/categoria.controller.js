@@ -415,7 +415,7 @@ const eliminarCategoria = async (req, res) => {
  * @param {object} res response express
  */
 
-const obtenerEstadisticasCategoria = async (req, res) => {
+const getEstadisticasCategoria = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -484,26 +484,39 @@ const obtenerEstadisticasCategoria = async (req, res) => {
         },
         estadisticas: {
           subcategorias: {
+            total: totalSubcategorias,
             activas: subcategoriasActivas,
             inactivas: totalSubcategorias - subcategoriasActivas,
           },
           productos: {
+            total: totalProductos,
             activos: productosActivos,
             inactivos: totalProductos - productosActivos,
           },
           inventario: {
-            valorTotal: valorTotalInventario,
-            stockTotal: stockTotal,
+            valorTotal: valorTotalInventario.toFixed(2), // redondear a 2 decimales
+            stockTotal,
           },
         },
       },
     });
   } catch (error) {
-    console.error("Error en obtenerEstadisticasCategoria", error);
+    console.error("Error en getEstadisticasCategoria", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener estadisticas de la categoria",
       error: error.message,
     });
   }
+};
+
+//Exportar controladores
+module.exports = {
+  getCategorias,
+  getCategoriasById, 
+  crearCategoria,
+  actualizarCategoria,
+  toggleCategoria,
+  eliminarCategoria,
+  getEstadisticasCategoria,
 };
