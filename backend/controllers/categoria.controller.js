@@ -7,9 +7,9 @@
 /**
  * Importamos modelos
  */
-const categoria = require("../models/categoria");
-const subcategoria = require("../models/subcategoria");
-const producto = require("../models/producto");
+const Categoria = require("../models/categoria");
+const Subcategoria = require("../models/subcategoria");
+const Producto = require("../models/producto");
 
 /**
  * obtener todas las categorias
@@ -41,7 +41,7 @@ const getCategorias = async (req, res) => {
     if (incluirSubcategorias === "true") {
       opciones.include = [
         {
-          model: subcategoria,
+          model: Subcategoria,
           as: "subcategorias",
           attributes: ["id", "nombre", "descripcion", "activo"],
         },
@@ -49,11 +49,11 @@ const getCategorias = async (req, res) => {
     }
 
     //obtener categorias
-    const categorias = await categoria.findAll(opciones);
+    const categorias = await Categoria.findAll(opciones);
     //Respuesta exitosa
     res.json({
       success: true,
-      count: categoria.length,
+      count: categorias.length,
       data: {
         categorias,
       },
@@ -81,15 +81,15 @@ const getCategoriasById = async (req, res) => {
     const { id } = req.params;
 
     //buscar categoris con subcategorias y contar productos
-    const categoria = await categoria.findByPk(id, {
+    const categoria = await Categoria.findByPk(id, {
       include: [
         {
-          model: subcategoria,
+          model: Subcategoria,
           as: "subcategorias",
           attributes: ["id", "nombre", "descripcion", "activo"],
         },
         {
-          model: producto,
+          model: Producto,
           as: "productos",
           attributes: ["id"],
         },
@@ -103,7 +103,7 @@ const getCategoriasById = async (req, res) => {
       });
     }
     //Contador de productos
-    const categoriaJSON = categoria.toJSON();
+    const categoriaJSON = Categoria.toJSON();
     categoriaJSON.totalProductos = categoriaJSON.productos.length;
     delete categoriaJSON.productos; // no enviar la lista completa de productos solo el contador
 
@@ -119,7 +119,7 @@ const getCategoriasById = async (req, res) => {
     if (incluirSubcategorias === "true") {
       opciones.include = [
         {
-          model: subcategoria,
+          model: Subcategoria,
           as: "subcategorias",
           attributes: ["id", "nombre", "descripcion", "activo"],
         },
@@ -127,7 +127,7 @@ const getCategoriasById = async (req, res) => {
     }
 
     //obtener categorias
-    const categorias = await categoria.findAll(opciones);
+    const categorias = await Categoria.findAll(opciones);
     //Respuesta exitosa
     res.json({
       success: true,
@@ -167,7 +167,7 @@ const crearCategoria = async (req, res) => {
     }
 
     //Validacion 2: Categoria duplicada
-    const categoriaExistente = await categoria.findOne({ where: { nombre } });
+    const categoriaExistente = await Categoria.findOne({ where: { nombre } });
     if (categoriaExistente) {
       return res.status(400).json({
         success: false,
@@ -175,7 +175,7 @@ const crearCategoria = async (req, res) => {
       });
     }
     //Crear nueva categoria
-    const nuevaCategoria = await categoria.create({
+    const nuevaCategoria = await Categoria.create({
       nombre,
       descripcion: descripcion || null, // Si no se proporciona descripcion, se establece como null
       activo: true,
@@ -219,7 +219,7 @@ const actualizarCategoria = async (req, res) => {
     const { nombre, descripcion } = req.body;
 
     //buscar categoria
-    const categoria = await categoria.findByPk(id);
+    const categoria = await Categoria.findByPk(id);
     if (!categoria) {
       return res.status(404).json({
         success: false,
@@ -229,7 +229,7 @@ const actualizarCategoria = async (req, res) => {
 
     //validacion 1: si se cambia el nombre verificar que no exista otra categoria con el mismo nombre
     if (nombre && nombre !== categoria.nombre) {
-      const categoriaConMismoNombre = await categoria.findOne({
+      const categoriaConMismoNombre = await Categoria.findOne({
         where: { nombre },
       });
       if (categoriaConMismoNombre) {
@@ -287,7 +287,7 @@ const toggleCategoria = async (req, res) => {
     const { id } = req.params;
 
     //buscar categoria
-    const categoria = await categoria.findByPk(id);
+    const categoria = await Categoria.findByPk(id);
     if (!categoria) {
       return res.status(404).json({
         success: false,
@@ -303,13 +303,13 @@ const toggleCategoria = async (req, res) => {
     await categoria.save();
 
     //contar cuantos registros se afectaron
-    const subcategoriasAfectadas = await subcategoria.count({
+    const subcategoriasAfectadas = await Subcategoria.count({
       where: {
         categoriaId: id,
       },
     });
 
-    const productosAfectados = await producto.count({
+    const productosAfectados = await Producto.count({
       where: {
         categoriaId: id,
       },
@@ -350,7 +350,7 @@ const eliminarCategoria = async (req, res) => {
     const { id } = req.params;
 
     //buscar categoria
-    const categoria = await categoria.findByPk(id);
+    const categoria = await Categoria.findByPk(id);
     if (!categoria) {
       return res.status(404).json({
         success: false,
@@ -359,7 +359,7 @@ const eliminarCategoria = async (req, res) => {
     }
 
     //validacion: verificar que no tenga subcategorias ni productos asociados
-    const subcategorias = await subcategoria.count({
+    const subcategorias = await Subcategoria.count({
       where: {
         categoriaId: id,
       },
@@ -373,7 +373,7 @@ const eliminarCategoria = async (req, res) => {
     }
 
     // validacion : verificar que no tenga productos asociados
-    const productos = await producto.count({
+    const productos = await Producto.count({
       where: {
         categoriaId: id,
       },
@@ -419,7 +419,7 @@ const getEstadisticasCategoria = async (req, res) => {
     const { id } = req.params;
 
     //Verificar que la categoria exista
-    const categoria = await categoria.findByPk(id);
+    const categoria = await Categoria.findByPk(id);
     if (!categoria) {
       return res.status(404).json({
         success: false,
@@ -428,35 +428,35 @@ const getEstadisticasCategoria = async (req, res) => {
     }
 
     //Contar subcategorias activas e inactivas
-    const subcategoriasActivas = await subcategoria.count({
+    const subcategoriasActivas = await Subcategoria.count({
       where: {
         categoriaId: id,
         activo: true,
       },
     });
 
-    const totalSubcategorias = await subcategoria.count({
+    const totalSubcategorias = await Subcategoria.count({
       where: {
         categoriaId: id,
       },
     });
 
     //Contar productos activos e inactivos
-    const productosActivos = await producto.count({
+    const productosActivos = await Producto.count({
       where: {
         categoriaId: id,
         activo: true,
       },
     });
 
-    const totalProductos = await producto.count({
+    const totalProductos = await Producto.count({
       where: {
         categoriaId: id,
       },
     });
 
     // Obtener productos para calcular estadisticas
-    const productos = await producto.findAll({
+    const productos = await Producto.findAll({
       where: {
         categoriaId: id,
       },

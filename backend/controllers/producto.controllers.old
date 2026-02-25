@@ -1,15 +1,16 @@
 /**
- * controlador de subcategorias
- * maneja las operaciones crud y activar y/o desactivar subcategorias
+ * controlador de productos
+ * maneja las operaciones crud y activar y/o desactivar productos
  * solo accesible por el administrador
  */
 
 /**
  * Importamos modelos
  */
+const Producto = require("../models/producto");
 const Subcategoria = require("../models/subcategoria");
 const Categoria = require("../models/categoria");
-const Producto = require("../models/producto");
+const DetallePedido = require("../models/detallePedido");
 
 /**
  * obtener todas las subcategorias
