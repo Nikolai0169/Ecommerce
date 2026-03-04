@@ -11,34 +11,80 @@ const Producto = require("../models/producto");
 const Categoria = require("../models/categoria");
 const Subcategoria = require("../models/subcategoria");
 
-//importar path y fs para manejo de imagenes
-const path = require("path");
-const fs = require("fss");
-
 /**
- * Obtener todos los productos
- * Query params:
- * subcategoriaId: ID de la subcategoría a la que pertenecen los productos
+ * Obtener todos los productos al publico
+ * GET /api/catalogo/productos
+ * query params:
  * categoriaId: ID de la categoría a la que pertenecen los productos (a través de subcategoría)
- * activo: true/false (filtrar por estado)
- * @param {*} req
- * @param {*} res
+ * subcategoriaId: ID de la subcategoría a la que pertenecen los productos
+ * preciomin, preciomax, rango de precios, nombre reciente
+ * @param {object} req request express
+ * @param {object} res response express
+ * solo muestra productos activos y con stock
  */
 const getProductos = async (req, res) => {
   try {
     const {
       categoriaId,
       subcategoriaId,
-      activo,
-      conStock,
+      buscar,
+      preciomin,
+      preciomax,
+      orden = "reciente",
       pagina = 1,
-      limite = 100,
+      limite = 12,
     } = req.query;
+    const { Op } = require("sequelize");
 
-    //Construir filtros para la consulta
-    const where = {};
+    //filtros base solo para mostrar productos activos y con stock
+    const where = {
+      activo: true,
+      stock: { [Op.gt]: 0 },
+    };
+
+    // filtros opcionales
     if (categoriaId) where.categoriaId = categoriaId;
     if (subcategoriaId) where.subcategoriaId = subcategoriaId;
+
+    //Busqueda de texto
+    if (buscar) {
+      where[Op.or] = [
+        { nombre: { [Op.iLike]: `%${buscar}%` } },
+        { descripcion: { [Op.iLike]: `%${buscar}%` } },
+        //permite buscar por nombre o descripcion
+      ];
+    }
+
+    //filtro por rango de precios
+    if (preciomin && preciomax) {
+      where.precio = {};
+      if (preciomin) where.precio[Op.gte] = parseFloat(preciomin);
+      if (preciomax) where.precio[Op.lte] = parseFloat(preciomax);
+    }
+
+    //ordenamiento
+    let order;
+    switch (orden) {
+      case "precio_asc":
+        order = [["precio", "ASC"]]; //precio ascendente
+        break;
+      case "precio_desc":
+        order = [["precio", "DESC"]]; //precio descendente
+        break;
+      case "nombre_asc":
+        order = [["nombre", "ASC"]]; //nombre ascendente
+        break;
+      case "nombre_desc":
+        order = [["nombre", "DESC"]]; //nombre descendente
+        break;
+      case "reciente":
+        order = [["createdAt", "DESC"]]; //reciente
+        break;
+      default:
+        order = [["createdAt", "DESC"]]; //reciente
+        break;
+    }
+
     if (activo !== undefined) where.activo = activo === "true";
     if (conStock !== undefined) where.conStock = conStock === "true";
 
