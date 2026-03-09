@@ -208,7 +208,7 @@ const crearPedido = async (req, res) => {
 
 /**
  * Obtener pedido del cliente autenticado
- * GET/ap/cliente/pedidos
+ * GET/api/cliente/pedidos
  * query:?estado=pediente&pagina=1&limite=10
  */
 

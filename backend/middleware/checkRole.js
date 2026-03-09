@@ -196,7 +196,7 @@ const esAdminOAuxiliar = (req, res, next) => {
  * permite al acceso a usuarios con rol de administrador
  */
 
-const soloAdmins = (req, res, next) => {
+const soloAdministrador = (req, res, next) => {
   try {
     //verificar si el usuario es un administrador
     if (!req.usuario) {
@@ -232,5 +232,5 @@ module.exports = {
   tieneRol,
   esPropioUsuarioOAdmin,
   esAdminOAuxiliar,
-  soloAdmins,
+  soloAdministrador,
 };
