@@ -25,7 +25,7 @@ const usuarioController = require("../controllers/usuario.controller");
 const pedidoController = require("../controllers/pedido.controller");
 
 //restricciones de rutas
-router.use(verificarAuth, esAdministrador);
+router.use(verificarAuth, esAdminOAuxiliar);
 
 //rutas de categoria
 
@@ -116,9 +116,6 @@ router.post("/usuarios", usuarioController.crearUsuario);
 // put/api/admin/usuarios/:id
 router.put("/usuarios/:id", usuarioController.actualizarUsuario);
 
-// put/api/admin/usuarios/:id
-router.delete("/usuarios/:id", usuarioController.actualizarUsuario);
-
 // put/api/admin/usuarios/:id/estado
 router.put("/usuarios/:id/estado", usuarioController.toggleUsuario);
 
@@ -146,3 +143,12 @@ router.get("/pedidos/:id", pedidoController.getPedidoById);
 
 // put/api/admin/pedidos/:id/estado
 router.put("/pedidos/:id/estado", pedidoController.actualizarEstadoPedido);
+
+// put/api/admin/pedidos/:id/cliente
+router.put("/pedidos/:id/cliente", pedidoController.cancelarPedido);
+
+// get/api/admin/pedidos/estadisticas
+router.get("/pedidos/estadisticas", pedidoController.getEstadisticasPedidos);
+
+// exportar rutas
+module.exports = router;
