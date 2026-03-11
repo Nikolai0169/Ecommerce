@@ -226,7 +226,7 @@ const actualizarUsuario = async (req, res) => {
       success: true,
       message: "Usuario actualizado correctamente",
       data: {
-        usuario,
+        usuario: usuario.toJSON(),
       },
     });
   } catch (error) {
@@ -261,7 +261,7 @@ const toggleUsuario = async (req, res) => {
     //Gaurdar cambiamos
     await categoria.save();
 
-    //No permitir desacticar el rol de administrador
+    //No permitir desactivar el rol de administrador
     if (usuario.id === req.usuario.id) {
       return res.status(400).json({
         success: false,

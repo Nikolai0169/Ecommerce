@@ -76,7 +76,7 @@ const fileFilter = (req, file, cb) => {
     "image/jpeg",
     "image/jpg",
     "image/png",
-    "image.gif",
+    "image/gif",
   ];
 
   //verificar si el tipo de atchivo esta en la lista permitida

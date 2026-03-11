@@ -8,7 +8,7 @@
  */
 
 const Usuario = require("../models/usuario");
-const { generarToken } = require("../config/jwt");
+const { generateToken } = require("../config/jwt");
 
 /**
  * obtener todas los usuarios
@@ -24,18 +24,11 @@ const register = async (req, res) => {
     const { nombre, apellido, email, password, telefono, direccion } =
       req.query;
 
-    //Validacion 1: Campos obligatorios
-    if (
-      !nombre &&
-      !apellido &&
-      !email &&
-      !password &&
-      !telefono &&
-      !direccion
-    ) {
+    //Validacion 1: validar que todos los campos requeridos se proporcionen
+    if (!nombre || !apellido || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Debe proporcionar al menos un filtro para buscar usuarios",
+        message: "El nombre, apellido, email y password son obligatorios",
       });
     }
 
@@ -48,7 +41,7 @@ const register = async (req, res) => {
       });
     }
 
-    //Validacion3: loongitud password
+    //Validacion3: longitud password
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
@@ -172,7 +165,7 @@ const login = async (req, res) => {
     }
 
     //Generar token
-    const token = generarToken({
+    const token = generateToken({
       id: usuario.id,
       email: usuario.email,
       rol: usuario.rol,
@@ -297,10 +290,10 @@ const updateMe = async (req, res) => {
 
 const changePassword = async (req, res) => {
   try {
-    const { passwordActual, passwordNuevo } = req.body;
+    const { passwordActual, passwordNueva } = req.body;
 
     // validacion 1: verificar que se proporcione passwordActual y passwordNuevo
-    if (!passwordActual || !passwordNuevo) {
+    if (!passwordActual || !passwordNueva) {
       return res.status(400).json({
         success: false,
         message: "Debe proporcionar la contraseña actual y la nueva contraseña",

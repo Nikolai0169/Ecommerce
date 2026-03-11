@@ -30,6 +30,7 @@ const getProductos = async (req, res) => {
       categoriaId,
       subcategoriaId,
       activo,
+      buscar,
       conStock,
       pagina = 1,
       limite = 100,
@@ -40,7 +41,15 @@ const getProductos = async (req, res) => {
     if (categoriaId) where.categoriaId = categoriaId;
     if (subcategoriaId) where.subcategoriaId = subcategoriaId;
     if (activo !== undefined) where.activo = activo === "true";
-    if (conStock !== undefined) where.conStock = conStock === "true";
+    if (conStock !== undefined)
+      where.conStock = { [require("sequelize").Op.gt]: 0 };
+    if (buscar) {
+      const { Op } = require("sequelize");
+      where[Op.or] = [
+        { nombre: { [Op.iLike]: `%${buscar}%` } },
+        { descripcion: { [Op.iLike]: `%${buscar}%` } },
+      ];
+    }
 
     //Paginacion
     const offset = (parseInt(pagina) - 1) * parseInt(limite);
