@@ -8,7 +8,7 @@
 const { DataTypes } = require("sequelize");
 
 //Importar la instancia de Sequelize para definir el modelo
-const sequelize = require("../config/database");
+const { sequelize } = require("../config/database");
 
 /**
  * Definir el modelo de producto utilizando sequelize.define()
@@ -170,10 +170,10 @@ const producto = sequelize.define(
        * verifica que la categoria no se cree con el campo "activo" establecido en false, lo que podría causar problemas de integridad de datos si se crean subcategorías o productos asociados a una categoría que ya está desactivada.
        */
       beforeCreate: async (producto) => {
-        const categoria = require("./categoria");
-        const subcategoria = require("./subcategoria");
+        const Categoria = require("./categoria");
+        const Subcategoria = require("./subcategoria");
 
-        //Buscar la categoría asociada a esta subcategoría para verificar su estado
+        //Buscar la categoría asociada a este producto para verificar su estado
         const categoria = await Categoria.findByPk(producto.categoriaId);
 
         if (!categoria) {
@@ -189,7 +189,7 @@ const producto = sequelize.define(
         }
 
         //Buscar la subcategoría padre
-        const subcategoria = await subcategoria.findByPk(
+        const subcategoria = await Subcategoria.findByPk(
           producto.subcategoriaId,
         );
 

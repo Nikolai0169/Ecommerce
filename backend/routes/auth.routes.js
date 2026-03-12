@@ -8,13 +8,13 @@ const express = require("express");
 const router = express.Router();
 
 // importar controladored de autenticacion
-const [
+const {
   register,
   login,
   getMe,
   updateMe,
   changePassword,
-] = require("../controllers/auth.controller");
+} = require("../controllers/auth.controller");
 
 //Importar middleware de autenticacion
 const { verificarAuth } = require("../middleware/auth");

@@ -8,7 +8,7 @@
 const { DataTypes } = require("sequelize");
 
 //Importar la instancia de Sequelize para definir el modelo
-const sequelize = require("../config/database");
+const { sequelize } = require("../config/database");
 
 /**
  * Definir el modelo de carrito utilizando sequelize.define()
@@ -153,7 +153,7 @@ const carrito = sequelize.define(
        * verifica si el campo "activo" ha cambiado a false (desactivado) y si es así, desactiva todas las subcategorías asociadas a esa categoría para mantener la integridad de los datos, esto ayuda a evitar problemas con productos que pertenecen a subcategorías desactivadas.
        * Si se activa una categoría (activo cambia a true), no se activan automáticamente las subcategorías o productos asociados, esto se deja a discreción del administrador para evitar activar subcategorías o productos que podrían no estar listos para ser activados.
        */
-      BeforeUpdate: async (itemcarrito) => {
+      beforeUpdate: async (itemcarrito) => {
         //Verificar si el campo "cantidad" ha cambiado a false (desactivado)
 
         if (itemcarrito.changed("cantidad")) {

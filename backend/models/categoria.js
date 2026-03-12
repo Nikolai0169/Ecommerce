@@ -8,7 +8,7 @@
 const { DataTypes } = require("sequelize");
 
 //Importar la instancia de Sequelize para definir el modelo
-const sequelize = require("../config/database");
+const { sequelize } = require("../config/database");
 
 /**
  * Definir el modelo de categoría utilizando sequelize.define()
@@ -16,7 +16,7 @@ const sequelize = require("../config/database");
  * En este caso, se define un modelo llamado "Categoria" con los campos id (clave primaria, auto-incremental), nombre (cadena de texto, no nulo) y descripcion (cadena de texto).
  */
 
-const categoria = sequelize.define(
+const Categoria = sequelize.define(
   "categoria",
   {
     //campos de la tabla categorias

@@ -8,7 +8,7 @@
 const { DataTypes } = require("sequelize");
 
 //Importar la instancia de Sequelize para definir el modelo
-const sequelize = require("../config/database");
+const { sequelize } = require("../config/database");
 
 /**
  * Definir el modelo de pedido utilizando sequelize.define()
@@ -156,39 +156,13 @@ const pedido = sequelize.define(
        * beforeCreate se ejecuta antes de crear un nuevo registro de categoría, este hook verifica si el campo "activo" está establecido en false (desactivado) y si es así, lanza un error para evitar que se creen categorías desactivadas, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
        * verifica que la categoria no se cree con el campo "activo" establecido en false, lo que podría causar problemas de integridad de datos si se crean subcategorías o productos asociados a una categoría que ya está desactivada.
        */
-      /**beforeCreate: async (itemcarrito) => {
-        const producto = require("./producto");
-        //Buscar el producto asociado a este item de carrito para verificar su estado
-        const prducto = await producto.findByPk(itemcarrito.productoId);
-
-        if (!prducto) {
-          throw new Error(
-            "El producto asociado a este item de carrito no existe", //Mensaje de error personalizado si se intenta crear un item de carrito con un producto que no existe
-          );
-        }
-
-        if (!prducto.activo) {
-          throw new Error(
-            "No se puede crear un item de carrito para un producto desactivado", //Mensaje de error personalizado si se intenta crear un item de carrito para un producto que está desactivado
-          );
-        }
-
-        if (!producto.hayStock(itemcarrito.cantidad)) {
-          throw new Error(
-            `Stock insuficiente, solo hay ${prducto.stock} unidades disponibles`, //Mensaje de error personalizado si se intenta crear un item de carrito con una cantidad que excede el stock disponible del producto
-          );
-        }
-
-        //Guardar el precio unitario del producto al momento de agregarlo al carrito para mantener el precio aunque el producto cambie de precio en el futuro
-        itemcarrito.precioUnitario = prducto.precio;
-      },
 
       /**
        * afterUpdate se ejecuta después de actualizar un registro de categoría, este hook verifica si el campo "activo" ha cambiado y si es así, lanza un error para evitar que se actualicen categorías a un estado inconsistente, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que pertenecen a subcategorías desactivadas.
        * verifica que la categoria no se actualice para establecer el campo "activo" en false, lo que podría causar problemas de integridad de datos si se desactivan subcategorías o productos asociados a una categoría que ya está desactivada.
         * Si se desactiva una categoría (activo cambia a false), no se desactivan automáticamente las subcategorías o productos asociados, esto se deja a discreción del administrador para evitar desactivar subcategorías o productos que podrían estar activos y listos para ser vendidos.       
        */
-      AfterUpdate: async (pedido) => {
+      afterUpdate: async (pedido) => {
         //Si el estado del pedido cambia a "pagado", verificar que el producto asociado a cada item de carrito tenga suficiente stock disponible para satisfacer la cantidad solicitada, esto ayuda a mantener la integridad de los datos y evitar problemas con productos que podrían no tener suficiente stock para satisfacer la cantidad solicitada en un pedido.
 
         if (pedido.changed("estado") && pedido.estado === "pagado") {
@@ -311,17 +285,17 @@ pedido.prototype.obtenerDetalles = async function () {
  * @param {string} estado - El estado por el cual se desea filtrar los pedidos, debe ser uno de los estados permitidos ("pendiente", "pagado", "enviado", "entregado" o "cancelado")
  * @returns {Promise<Array>} Un array de pedidos que tienen el estado especificado, o un error si el estado proporcionado no es válido.
  */
-carrito.obtenerPorEstado = async function (estado) {
+pedido.obtenerPorEstado = async function (estado) {
   const usuario = require("./usuario");
   return await this.findAll({
     where: { estado },
-    incluide: [
+    include: [
       {
         model: usuario,
         as: "usuario",
       },
     ],
-    order: [["createdAt", "DESC"]], //Ordenar los pedidos por fecha de creación de forma descendente (del más reciente al más antiguo)});
+    order: [["createdAt", "DESC"]], //Ordenar los pedidos por fecha de creación de forma descendente (del más reciente al más antiguo)
   });
 };
 /**
@@ -333,7 +307,7 @@ pedido.obtenerHistorialPorUsuario = async function (usuarioId) {
   const usuario = require("./usuario");
   return await this.findAll({
     where: { usuarioId },
-    orders: [["createdAt", "DESC"]], //Ordenar los pedidos por fecha de creación de forma descendente (del más reciente al más antiguo)
+    order: [["createdAt", "DESC"]], //Ordenar los pedidos por fecha de creación de forma descendente (del más reciente al más antiguo)
   });
 };
 //Exportar el modelo de pedido para ser utilizado en otras partes de la aplicación

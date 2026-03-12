@@ -9,7 +9,7 @@
 const { DataTypes } = require("sequelize");
 
 //Importar la instancia de Sequelize para definir el modelo
-const sequelize = require("../config/database");
+const { sequelize } = require("../config/database");
 const { parse } = require("node:path");
 const { group } = require("node:console");
 
@@ -152,7 +152,7 @@ const detallePedido = sequelize.define(
        * Si la cantidad solicitada en el detalle de pedido excede el stock disponible del producto asociado, se lanza un error con un mensaje personalizado indicando que el stock es insuficiente y mostrando la cantidad disponible.
        * Si todas las verificaciones son exitosas, se actualiza el subtotal del detalle de pedido a partir del nuevo precio unitario y la nueva cantidad para mantener el subtotal actualizado en función de los cambios realizados en el detalle de pedido.
        */
-      BeforeUpdate: (detalle) => {
+      beforeUpdate: (detalle) => {
         //Verificar si el campo "PrecioUnitario" ha cambiado a false (desactivado)
 
         if (detalle.changed("PrecioUnitario") || detalle.changed("cantidad")) {

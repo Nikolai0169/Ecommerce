@@ -17,13 +17,13 @@ const path = require("path");
 require("dotenv").config();
 
 //importar configuración de base de datos
-const dbConfig = require("./backend/config/database");
+const { sequelize, testConnection, syncDatabase } = require("./config/database");
 
 //importar modelos y asociaciones
-const { initAssociations } = require("./backend/models");
+const { initAssociations } = require("./models");
 
 //Importar seeders
-const { runSeeders } = require("./seeders/adminseeder");
+const { runSeeders } = require("./seeders/adminSeeder");
 
 //crear aplicacion express
 const app = express();
@@ -77,20 +77,20 @@ if (process.env.NODE_ENV === "development") {
 //rutas
 
 //rutas raiz para verificar si el servidor esta funcionando
-app.get("/,", (req, res) => {
+app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Servidor funcionando",
-    versiom: "1.0.0",
+    version: "1.0.0",
     timeStamp: new Date().toISOString(),
   });
 });
 
 //rutas de salud para verificar si el servidor esta funcionando
-app.get("api/helth", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({
     success: true,
-    status: "helthy",
+    status: "healthy",
     database: "connected",
     timeStamp: new Date().toISOString(),
   });
@@ -209,7 +209,7 @@ process.on("SIGINT", () => {
 });
 
 //capturar los errores no manejados
-Process.on("unhandledRejection", (error) => {
+process.on("unhandledRejection", (error) => {
   console.error("X Error fatal al iniciar el servidor:", err);
   process.exit(1);
 });

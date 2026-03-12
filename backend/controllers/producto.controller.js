@@ -13,7 +13,7 @@ const Subcategoria = require("../models/subcategoria");
 
 //importar path y fs para manejo de imagenes
 const path = require("path");
-const fs = require("fss");
+const fs = require("fs");
 
 /**
  * Obtener todos los productos

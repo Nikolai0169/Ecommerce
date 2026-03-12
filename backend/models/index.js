@@ -7,7 +7,7 @@
 //importar todos los modelos
 
 const usuario = require("./usuario.js");
-const categoria = requiere("./categoria.js");
+const categoria = require("./categoria.js");
 const carrito = require("./carrito.js");
 const subcategoria = require("./subcategoria.js");
 const producto = require("./producto.js");
@@ -156,7 +156,7 @@ pedido.belongsTo(usuario, {
 
 pedido.hasMany(detallePedido, {
   foreignKey: "pedidoId", // campo que conecta las tablas
-  as: "detallePedido", // alias para la relacion
+  as: "detallePedidos", // alias para la relacion desde pedido
   onDelete: "CASCADE", //si se elimina el pedido eliminar el detalle de pedido
   onUpdate: "CASCADE", // si se actualiza el pedido se actualiza el detalle de pedido
 });
@@ -176,7 +176,7 @@ detallePedido.belongsTo(pedido, {
 
 producto.hasMany(detallePedido, {
   foreignKey: "productoId", // campo que conecta las tablas
-  as: "detallePedido", // alias para la relacion
+  as: "detallePedidoProducto", // alias para la relacion desde producto
   onDelete: "RESTRICT", //si se elimina el producto no se elimina el detalle de pedido
   onUpdate: "CASCADE", // si se actualiza el producto se actualiza el detalle de pedido
 });

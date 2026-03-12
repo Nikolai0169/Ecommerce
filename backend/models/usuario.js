@@ -11,7 +11,7 @@ const { DataTypes } = require("sequelize");
 const bcrypt = require("bcrypt");
 
 //Importar la instancia de Sequelize para definir el modelo
-const sequelize = require("../config/database");
+const { sequelize } = require("../config/database");
 const { argon2 } = require("node:crypto");
 
 /**
@@ -20,7 +20,7 @@ const { argon2 } = require("node:crypto");
  * En este caso, se define un modelo llamado "Categoria" con los campos id (clave primaria, auto-incremental), nombre (cadena de texto, no nulo) y descripcion (cadena de texto).
  */
 
-const usuario = sequelize.define(
+const Usuario = sequelize.define(
   "Usuario",
   {
     //campos de la tabla categorias
@@ -190,14 +190,6 @@ const usuario = sequelize.define(
  */
 Usuario.prototype.compararContraseña = async function (contraseñaIngresada) {
   return await bcrypt.compare(contraseñaIngresada, this.contraseña);
-};
-Categoria.prototype.getNumerosubcategoriasActivas = async function () {
-  const subcategoria = require("./subcategoria");
-  return await subcategoria.count({
-    where: {
-      categoriaId: this.id, //Contar solo las subcategorías asociadas a esta categoría
-    },
-  });
 };
 
 /**
